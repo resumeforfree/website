@@ -3,10 +3,10 @@
         <div class="max-w-md w-full space-y-8">
             <div class="text-center">
                 <h1 class="text-3xl font-bold text-gray-900">
-                    Sign In
+                    {{ $t('auth.signIn') }}
                 </h1>
                 <p class="mt-2 text-gray-600">
-                    Sign in to your account to access your resumes
+                    {{ $t('auth.signInDescription') }}
                 </p>
             </div>
             <form
@@ -15,24 +15,24 @@
             >
                 <div class="space-y-4">
                     <div>
-                        <Label for="email">Email</Label>
+                        <Label for="email">{{ $t('auth.email') }}</Label>
                         <Input
                             id="email"
                             v-model="email"
                             type="email"
-                            placeholder="Enter your email"
+                            :placeholder="$t('auth.enterEmail')"
                             required
                             :disabled="loading"
                             class="mt-1"
                         />
                     </div>
                     <div>
-                        <Label for="password">Password</Label>
+                        <Label for="password">{{ $t('auth.password') }}</Label>
                         <Input
                             id="password"
                             v-model="password"
                             type="password"
-                            placeholder="Enter your password"
+                            :placeholder="$t('auth.enterPassword')"
                             required
                             :disabled="loading"
                             class="mt-1"
@@ -51,7 +51,7 @@
                         v-if="loading"
                         class="mr-2 h-4 w-4 animate-spin"
                     />
-                    Sign In
+                    {{ $t('auth.signIn') }}
                 </Button>
                 <div
                     v-if="error"
@@ -62,12 +62,12 @@
             </form>
             <div class="text-center">
                 <p class="text-sm text-gray-600">
-                    Don't have an account?
+                    {{ $t('auth.dontHaveAccount') }}
                     <NuxtLink
                         to="/auth/register"
                         class="font-medium text-blue-600 hover:text-blue-500 hover:underline"
                     >
-                        Sign up
+                        {{ $t('auth.signUp') }}
                     </NuxtLink>
                 </p>
             </div>
@@ -82,6 +82,7 @@ import { Label } from '~/components/ui/label';
 import { Loader2 } from 'lucide-vue-next';
 import TurnstileWidget from '~/components/elements/TurnstileWidget.vue';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 const router = useRouter();
 const email = ref('');
@@ -98,15 +99,15 @@ const handleLogin = async () => {
         router.push('/resumes');
     }
     else {
-        error.value = result.error || 'Login failed';
+        error.value = result.error || t('auth.loginFailed');
         turnstileToken.value = null;
     }
     loading.value = false;
 };
 useHead({
-    title: 'Sign In - Resume Builder',
+    title: `${t('auth.signIn')} - Resume Builder`,
     meta: [
-        { name: 'description', content: 'Sign in to your Resume Builder account to access your saved resumes.' },
+        { name: 'description', content: t('auth.signInDescription') },
     ],
 });
 </script>

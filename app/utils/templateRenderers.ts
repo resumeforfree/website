@@ -3,6 +3,8 @@ import type { SectionContent } from '~/types/templateConfig';
 import { convertDateRange, convertEmail, convertExternalLinkIcon, convertLink } from './typstUtils';
 import { escapeTypstText } from './stringUtils';
 
+type TranslateFunction = (key: string) => string;
+
 export const SOCIAL_PLATFORM_LABELS = {
     linkedin: 'LinkedIn',
     github: 'GitHub',
@@ -13,10 +15,12 @@ export const SOCIAL_PLATFORM_LABELS = {
     devto: 'Dev.to',
     personal: 'Personal',
 } as const;
-export const generateExperienceContent = (experiences: Experience[]): SectionContent[] => {
+export const generateExperienceContent = (experiences: Experience[], t?: TranslateFunction): SectionContent[] => {
     return experiences.map((experience) => {
-        const title = `${experience.position}${experience.company ? ' at ' + experience.company : ''}${experience.location ? ', ' + experience.location : ''}`;
-        const dateRange = convertDateRange(experience.startDate, experience.endDate, experience.isPresent);
+        const at = t ? t('template.at') : ' at ';
+        const separator = t ? t('template.separator') : ', ';
+        const title = `${experience.position}${experience.company ? at + experience.company : ''}${experience.location ? separator + experience.location : ''}`;
+        const dateRange = convertDateRange(experience.startDate, experience.endDate, experience.isPresent, t);
         const companyLink = experience.companyUrl?.trim() ? convertExternalLinkIcon(experience.companyUrl) : '';
         const achievements = experience.achievements
             .filter(achievement => achievement.text && achievement.text.trim() !== '')
@@ -29,10 +33,12 @@ export const generateExperienceContent = (experiences: Experience[]): SectionCon
         };
     });
 };
-export const generateInternshipsContent = (internships: Internship[]): SectionContent[] => {
+export const generateInternshipsContent = (internships: Internship[], t?: TranslateFunction): SectionContent[] => {
     return internships.map((internship) => {
-        const title = `${internship.position}${internship.company ? ' at ' + internship.company : ''}${internship.location ? ', ' + internship.location : ''}`;
-        const dateRange = convertDateRange(internship.startDate, internship.endDate, internship.isPresent);
+        const at = t ? t('template.at') : ' at ';
+        const separator = t ? t('template.separator') : ', ';
+        const title = `${internship.position}${internship.company ? at + internship.company : ''}${internship.location ? separator + internship.location : ''}`;
+        const dateRange = convertDateRange(internship.startDate, internship.endDate, internship.isPresent, t);
         const companyLink = internship.companyUrl?.trim() ? convertExternalLinkIcon(internship.companyUrl) : '';
         const achievements = internship.achievements
             .filter(achievement => achievement.text && achievement.text.trim() !== '')
@@ -45,13 +51,16 @@ export const generateInternshipsContent = (internships: Internship[]): SectionCo
         };
     });
 };
-export const generateEducationContent = (education: Education[]): SectionContent[] => {
+export const generateEducationContent = (education: Education[], t?: TranslateFunction): SectionContent[] => {
     return education.map((edu) => {
-        const title = `${edu.degree}${edu.institution ? ' at ' + edu.institution : ''}${edu.location ? ', ' + edu.location : ''}`;
-        const dateRange = convertDateRange(edu.startDate, edu.endDate, edu.isPresent || false);
+        const at = t ? t('template.at') : ' at ';
+        const separator = t ? t('template.separator') : ', ';
+        const gradeLabel = t ? t('template.grade') : 'Grade:';
+        const title = `${edu.degree}${edu.institution ? at + edu.institution : ''}${edu.location ? separator + edu.location : ''}`;
+        const dateRange = convertDateRange(edu.startDate, edu.endDate, edu.isPresent || false, t);
         let additionalInfo = '';
         if (edu.graduationScore && edu.graduationScore.trim()) {
-            additionalInfo += `*Grade:* ${escapeTypstText(edu.graduationScore)}`;
+            additionalInfo += `*${gradeLabel}* ${escapeTypstText(edu.graduationScore)}`;
         }
         if (edu.description && edu.description.trim()) {
             if (additionalInfo) additionalInfo += '\n\n';
@@ -64,10 +73,12 @@ export const generateEducationContent = (education: Education[]): SectionContent
         };
     });
 };
-export const generateVolunteeringContent = (volunteering: Volunteering[]): SectionContent[] => {
+export const generateVolunteeringContent = (volunteering: Volunteering[], t?: TranslateFunction): SectionContent[] => {
     return volunteering.map((vol) => {
-        const title = `${vol.position}${vol.organization ? ' at ' + vol.organization : ''}${vol.location ? ', ' + vol.location : ''}`;
-        const dateRange = convertDateRange(vol.startDate, vol.endDate, vol.isPresent);
+        const at = t ? t('template.at') : ' at ';
+        const separator = t ? t('template.separator') : ', ';
+        const title = `${vol.position}${vol.organization ? at + vol.organization : ''}${vol.location ? separator + vol.location : ''}`;
+        const dateRange = convertDateRange(vol.startDate, vol.endDate, vol.isPresent, t);
         const achievements = vol.achievements
             .filter(achievement => achievement.text && achievement.text.trim() !== '')
             .map(achievement => achievement.text);

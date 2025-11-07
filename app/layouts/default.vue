@@ -61,43 +61,45 @@ onMounted(async () => {
                         </div>
                     </div>
                     <div class="flex items-center space-x-2 md:space-x-6">
-                        <template v-if="!authStore.isLoggedIn">
-                            <NuxtLink to="/auth/login">
+                        <ClientOnly>
+                            <template v-if="!authStore.isLoggedIn">
+                                <NuxtLink to="/auth/login">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        class="text-gray-600 hover:text-gray-900"
+                                    >
+                                        <User class="w-4 h-4 mr-1" />
+                                        <span class="hidden sm:inline">{{ t('navigation.signIn') }}</span>
+                                    </Button>
+                                </NuxtLink>
+                                <NuxtLink to="/auth/register">
+                                    <Button
+                                        size="sm"
+                                    >
+                                        <span class="text-sm">{{ t('navigation.signUp') }}</span>
+                                    </Button>
+                                </NuxtLink>
+                            </template>
+                            <template v-else>
+                                <NuxtLink
+                                    to="/profile"
+                                    class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                                >
+                                    <User class="w-4 h-4" />
+                                    <span class="hidden sm:inline">{{ authStore.currentUser?.name || authStore.currentUser?.email }}</span>
+                                </NuxtLink>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     class="text-gray-600 hover:text-gray-900"
+                                    @click="handleLogout"
                                 >
-                                    <User class="w-4 h-4 mr-1" />
-                                    <span class="hidden sm:inline">{{ t('navigation.signIn') }}</span>
+                                    <LogOut class="w-4 h-4 mr-1" />
+                                    <span class="hidden sm:inline">{{ t('navigation.signOut') }}</span>
                                 </Button>
-                            </NuxtLink>
-                            <NuxtLink to="/auth/register">
-                                <Button
-                                    size="sm"
-                                >
-                                    <span class="text-sm">{{ t('navigation.signUp') }}</span>
-                                </Button>
-                            </NuxtLink>
-                        </template>
-                        <template v-else>
-                            <NuxtLink
-                                to="/profile"
-                                class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                            >
-                                <User class="w-4 h-4" />
-                                <span class="hidden sm:inline">{{ authStore.currentUser?.name || authStore.currentUser?.email }}</span>
-                            </NuxtLink>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                class="text-gray-600 hover:text-gray-900"
-                                @click="handleLogout"
-                            >
-                                <LogOut class="w-4 h-4 mr-1" />
-                                <span class="hidden sm:inline">{{ t('navigation.signOut') }}</span>
-                            </Button>
-                        </template>
+                            </template>
+                        </ClientOnly>
                         <div class="h-4 w-px bg-gray-300 hidden md:block" />
                         <NuxtLink
                             class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"

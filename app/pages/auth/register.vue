@@ -3,10 +3,10 @@
         <div class="max-w-md w-full space-y-8">
             <div class="text-center">
                 <h1 class="text-3xl font-bold text-gray-900">
-                    Create Account
+                    {{ $t('auth.createAccount') }}
                 </h1>
                 <p class="mt-2 text-gray-600">
-                    Create a free account to save and access your resumes
+                    {{ $t('auth.createAccountDescription') }}
                 </p>
             </div>
             <form
@@ -15,36 +15,36 @@
             >
                 <div class="space-y-4">
                     <div>
-                        <Label for="name">Name</Label>
+                        <Label for="name">{{ $t('auth.name') }}</Label>
                         <Input
                             id="name"
                             v-model="name"
                             type="text"
-                            placeholder="Enter your name"
+                            :placeholder="$t('auth.enterName')"
                             required
                             :disabled="loading"
                             class="mt-1"
                         />
                     </div>
                     <div>
-                        <Label for="email">Email</Label>
+                        <Label for="email">{{ $t('auth.email') }}</Label>
                         <Input
                             id="email"
                             v-model="email"
                             type="email"
-                            placeholder="Enter your email"
+                            :placeholder="$t('auth.enterEmail')"
                             required
                             :disabled="loading"
                             class="mt-1"
                         />
                     </div>
                     <div>
-                        <Label for="password">Password</Label>
+                        <Label for="password">{{ $t('auth.password') }}</Label>
                         <Input
                             id="password"
                             v-model="password"
                             type="password"
-                            placeholder="Create a password (min 6 characters)"
+                            :placeholder="$t('auth.createPasswordPlaceholder')"
                             required
                             minlength="6"
                             :disabled="loading"
@@ -52,12 +52,12 @@
                         />
                     </div>
                     <div>
-                        <Label for="passwordConfirm">Confirm Password</Label>
+                        <Label for="passwordConfirm">{{ $t('auth.confirmPassword') }}</Label>
                         <Input
                             id="passwordConfirm"
                             v-model="passwordConfirm"
                             type="password"
-                            placeholder="Confirm your password"
+                            :placeholder="$t('auth.confirmPasswordPlaceholder')"
                             required
                             :disabled="loading"
                             class="mt-1"
@@ -76,7 +76,7 @@
                         v-if="loading"
                         class="mr-2 h-4 w-4 animate-spin"
                     />
-                    Create Account
+                    {{ $t('auth.createAccount') }}
                 </Button>
                 <div
                     v-if="error"
@@ -93,12 +93,12 @@
             </form>
             <div class="text-center">
                 <p class="text-sm text-gray-600">
-                    Already have an account?
+                    {{ $t('auth.alreadyHaveAccount') }}
                     <NuxtLink
                         to="/auth/login"
                         class="font-medium text-blue-600 hover:text-blue-500 hover:underline"
                     >
-                        Sign in
+                        {{ $t('auth.signIn') }}
                     </NuxtLink>
                 </p>
             </div>
@@ -113,6 +113,7 @@ import { Label } from '~/components/ui/label';
 import { Loader2 } from 'lucide-vue-next';
 import TurnstileWidget from '~/components/elements/TurnstileWidget.vue';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 const router = useRouter();
 const name = ref('');
@@ -133,7 +134,7 @@ const isFormValid = computed(() => {
 });
 watch([password, passwordConfirm], () => {
     if (password.value && passwordConfirm.value && password.value !== passwordConfirm.value) {
-        error.value = 'Passwords do not match';
+        error.value = t('auth.passwordsDoNotMatch');
     }
     else {
         error.value = '';
@@ -152,21 +153,21 @@ const handleRegister = async () => {
         turnstileToken.value,
     );
     if (result.success) {
-        success.value = 'Account created successfully! Redirecting...';
+        success.value = t('auth.accountCreatedSuccess');
         setTimeout(() => {
             router.push('/resumes');
         }, 1500);
     }
     else {
-        error.value = result.error || 'Registration failed';
+        error.value = result.error || t('auth.registrationFailed');
         turnstileToken.value = null;
     }
     loading.value = false;
 };
 useHead({
-    title: 'Create Account - Resume Builder',
+    title: `${t('auth.createAccount')} - Resume Builder`,
     meta: [
-        { name: 'description', content: 'Create a free Resume Builder account to save up to 3 resumes in the cloud.' },
+        { name: 'description', content: t('auth.createAccountDescription') },
     ],
 });
 </script>

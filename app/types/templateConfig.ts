@@ -69,4 +69,4 @@ export const COMPACT_LAYOUT_CONFIG: TemplateLayoutConfig = {
         itemSpacing: '',
     },
 };
-export type SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig) => string;
+export type SectionRenderer = (data: ResumeData, context: import('~/utils/rendererContext').RendererContext) => string;

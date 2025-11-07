@@ -5,43 +5,45 @@ import { escapeTypstText } from '~/utils/stringUtils';
 import { convertGrid, SECTION_SPACING } from '~/utils/typstUtils';
 import { useSettingsStore } from '~/stores/settings';
 import { getSharedSectionRenderers } from '~/utils/sectionRenderers';
+import { RendererContext } from '~/utils/rendererContext';
 
 export interface Template {
     id: string;
     name: string;
     description: string;
     layoutConfig: TemplateLayoutConfig;
-    parse: (data: ResumeData, font: string) => string;
+    parse: (data: ResumeData, font: string, locale: string, t: (key: string) => string) => string;
 }
-const convertResumeHeader = (data: ResumeData, fontSize: number, sharedRenderers: ReturnType<typeof getSharedSectionRenderers>, config: TemplateLayoutConfig) => {
+const convertResumeHeader = (data: ResumeData, context: RendererContext, sharedRenderers: ReturnType<typeof getSharedSectionRenderers>) => {
     const fullName = `${escapeTypstText(data?.firstName || '')} ${escapeTypstText(data?.lastName || '')}`.trim();
     const position = escapeTypstText(data?.position || '');
     const positionBlock = position ? `#block(above: 0em, below: ${SECTION_SPACING})[${position}]` : '';
-    const profileSection = sharedRenderers.profile(data, fontSize, config);
+    const profileSection = sharedRenderers.profile(data, context);
     return `= ${fullName}
 ${positionBlock}
 ${profileSection}`;
 };
-const parse = (data: ResumeData, font: string): string => {
+const parse = (data: ResumeData, font: string, locale: string = 'en', t: (key: string) => string): string => {
     const settings: TemplateSettings = { font };
     const settingsStore = useSettingsStore();
     const fontSize = settingsStore.fontSize;
-    const { locale } = useI18n();
-    const isArabic = locale.value === 'ar';
+    const isArabic = locale === 'ar';
 
-    const sharedRenderers = getSharedSectionRenderers();
     const config = DEFAULT_LAYOUT_CONFIG;
+    const context = new RendererContext(t, fontSize, config);
+    const sharedRenderers = getSharedSectionRenderers();
+
     const allSections = {
-        experiences: () => sharedRenderers.experience(data, fontSize, config),
-        internships: () => sharedRenderers.internships(data, fontSize, config),
-        education: () => sharedRenderers.education(data, fontSize, config),
-        contact: () => sharedRenderers.contactInfo(data, fontSize, config),
-        socialLinks: () => sharedRenderers.socialLinks(data, fontSize, config),
-        projects: () => sharedRenderers.projects(data, fontSize, config),
-        languages: () => sharedRenderers.languages(data, fontSize, config),
-        technicalSkills: () => sharedRenderers.skills(data, fontSize, config),
-        volunteering: () => sharedRenderers.volunteering(data, fontSize, config),
-        certificates: () => sharedRenderers.certificates(data, fontSize, config),
+        experiences: () => sharedRenderers.experience(data, context),
+        internships: () => sharedRenderers.internships(data, context),
+        education: () => sharedRenderers.education(data, context),
+        contact: () => sharedRenderers.contactInfo(data, context),
+        socialLinks: () => sharedRenderers.socialLinks(data, context),
+        projects: () => sharedRenderers.projects(data, context),
+        languages: () => sharedRenderers.languages(data, context),
+        technicalSkills: () => sharedRenderers.skills(data, context),
+        volunteering: () => sharedRenderers.volunteering(data, context),
+        certificates: () => sharedRenderers.certificates(data, context),
     };
     const fixedLeftSections = ['experiences', 'internships', 'education'];
     const movableSections = ['projects', 'languages', 'technicalSkills', 'volunteering', 'certificates'];
@@ -98,7 +100,7 @@ const parse = (data: ResumeData, font: string): string => {
         allSections['socialLinks'](),
     ].filter(content => content.trim() !== '');
     const rightContent = [...staticRightContent, ...dynamicRightContent].join('\n\n');
-    const headerAndLeftContent = `${convertResumeHeader(data, fontSize, sharedRenderers, config)}
+    const headerAndLeftContent = `${convertResumeHeader(data, context, sharedRenderers)}
 ${leftContent}`;
     const twoColumnLayout = convertGrid([headerAndLeftContent, rightContent], '(7fr, 3fr)');
 

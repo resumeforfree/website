@@ -131,6 +131,7 @@ class TypstLoader {
                         '/fonts/geist-regular.ttf',
                         // Arabic fonts
                         '/fonts/ar/naskh.ttf',
+                        '/fonts/ar/naskh-bold.ttf',
                     ], { assets: false }),
                 ],
             });

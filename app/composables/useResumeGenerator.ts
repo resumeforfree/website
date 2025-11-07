@@ -3,13 +3,15 @@ import type { ResumeData } from '~/types/resume';
 
 export const useResumeGenerator = () => {
     const { isReady: typstReady, isLoading: typstLoading } = useTypstLoader();
+    const { locale, t } = useI18n();
+
     const generateTypstContent = (
         resumeData: ResumeData,
         templateId = 'default',
         font = 'Calibri',
     ): string => {
         const template = getTemplate(templateId);
-        return template.parse(resumeData, font);
+        return template.parse(resumeData, font, locale.value, t);
     };
     const generatePreview = async (
         resumeData: ResumeData,

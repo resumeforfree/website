@@ -5,13 +5,14 @@ import { escapeTypstText } from '~/utils/stringUtils';
 import { convertEmail, convertLink, SECTION_SPACING } from '~/utils/typstUtils';
 import { useSettingsStore } from '~/stores/settings';
 import { getSharedSectionRenderers } from '~/utils/sectionRenderers';
+import { RendererContext } from '~/utils/rendererContext';
 
 export interface Template {
     id: string;
     name: string;
     description: string;
     layoutConfig: TemplateLayoutConfig;
-    parse: (data: ResumeData, font: string) => string;
+    parse: (data: ResumeData, font: string, locale: string, t: (key: string) => string) => string;
 }
 const renderHeaderLeftColumn = (data: ResumeData, fontSize: number): string[] => {
     const rows: string[] = [];
@@ -96,24 +97,25 @@ const convertResumeHeader = (data: ResumeData, fontSize: number) => {
     }
     return headerParts.join('\n');
 };
-const parse = (data: ResumeData, font: string): string => {
+const parse = (data: ResumeData, font: string, locale: string = 'en', t: (key: string) => string): string => {
     const settings: TemplateSettings = { font };
     const settingsStore = useSettingsStore();
     const fontSize = settingsStore.fontSize;
-    const { locale } = useI18n();
-    const isArabic = locale.value === 'ar';
+    const isArabic = locale === 'ar';
 
-    const sharedRenderers = getSharedSectionRenderers();
     const config = COMPACT_LAYOUT_CONFIG;
+    const context = new RendererContext(t, fontSize, config);
+    const sharedRenderers = getSharedSectionRenderers();
+
     const sectionRenderers: Record<string, () => string> = {
-        education: () => sharedRenderers.education(data, fontSize, config),
-        experience: () => sharedRenderers.experience(data, fontSize, config),
-        internships: () => sharedRenderers.internships(data, fontSize, config),
-        skills: () => sharedRenderers.skills(data, fontSize, config),
-        projects: () => sharedRenderers.projects(data, fontSize, config),
-        volunteering: () => sharedRenderers.volunteering(data, fontSize, config),
-        languages: () => sharedRenderers.languages(data, fontSize, config),
-        certificates: () => sharedRenderers.certificates(data, fontSize, config),
+        education: () => sharedRenderers.education(data, context),
+        experience: () => sharedRenderers.experience(data, context),
+        internships: () => sharedRenderers.internships(data, context),
+        skills: () => sharedRenderers.skills(data, context),
+        projects: () => sharedRenderers.projects(data, context),
+        volunteering: () => sharedRenderers.volunteering(data, context),
+        languages: () => sharedRenderers.languages(data, context),
+        certificates: () => sharedRenderers.certificates(data, context),
     };
     const sectionsToRender = Object.keys(sectionRenderers);
     const sortedSections = sectionsToRender.sort((a, b) => {

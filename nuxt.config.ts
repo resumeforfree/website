@@ -116,7 +116,7 @@ export default defineNuxtConfig({
             },
         ],
         lazy: true,
-        langDir: '../locales',
+        langDir: 'locales',
         strategy: 'no_prefix',
         detectBrowserLanguage: {
             useCookie: true,

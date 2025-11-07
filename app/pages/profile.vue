@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/com
 import { Separator } from '~/components/ui/separator';
 import { User, Lock, Eye, EyeOff } from 'lucide-vue-next';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 
 // Redirect if not logged in
@@ -32,22 +33,22 @@ const handleChangePassword = async () => {
     passwordErrors.value = [];
 
     if (!passwordForm.value.currentPassword) {
-        passwordErrors.value.push('Current password is required');
+        passwordErrors.value.push(t('auth.currentPasswordRequired'));
         return;
     }
 
     if (!passwordForm.value.newPassword) {
-        passwordErrors.value.push('New password is required');
+        passwordErrors.value.push(t('auth.newPasswordRequired'));
         return;
     }
 
     if (passwordForm.value.newPassword.length < 8) {
-        passwordErrors.value.push('New password must be at least 8 characters');
+        passwordErrors.value.push(t('auth.newPasswordMinLength'));
         return;
     }
 
     if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-        passwordErrors.value.push('New passwords do not match');
+        passwordErrors.value.push(t('auth.newPasswordsDoNotMatch'));
         return;
     }
 
@@ -70,11 +71,11 @@ const handleChangePassword = async () => {
             confirmPassword: '',
         };
 
-        toast.success('Password changed successfully');
+        toast.success(t('auth.passwordChangedSuccess'));
     }
     catch (error: unknown) {
         console.error('Password change error:', error);
-        const errorMessage = (error as Error)?.message || 'Failed to change password';
+        const errorMessage = (error as Error)?.message || t('auth.passwordChangeError');
         passwordErrors.value.push(errorMessage);
         toast.error(errorMessage);
     }
@@ -84,11 +85,11 @@ const handleChangePassword = async () => {
 };
 
 useHead({
-    title: 'Profile - Free Resume Builder',
+    title: t('profile.title'),
     meta: [
         {
             name: 'description',
-            content: 'Manage your account settings and profile information.',
+            content: t('profile.description'),
         },
     ],
 });
@@ -101,10 +102,10 @@ useHead({
                 <!-- Page Header -->
                 <div class="mb-8">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                        Profile Settings
+                        {{ $t('profile.title') }}
                     </h1>
                     <p class="text-gray-600">
-                        Manage your account settings and preferences
+                        {{ $t('profile.description') }}
                     </p>
                 </div>
 
@@ -120,7 +121,7 @@ useHead({
                                         @click="activeSection = 'personal'"
                                     >
                                         <User class="w-4 h-4" />
-                                        Personal Information
+                                        {{ $t('profile.personalInformation') }}
                                     </button>
                                     <button
                                         class="w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors text-left"
@@ -128,7 +129,7 @@ useHead({
                                         @click="activeSection = 'password'"
                                     >
                                         <Lock class="w-4 h-4" />
-                                        Change Password
+                                        {{ $t('auth.changePassword') }}
                                     </button>
                                 </nav>
                             </CardContent>
@@ -142,10 +143,10 @@ useHead({
                             <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
                                     <User class="w-5 h-5" />
-                                    Personal Information
+                                    {{ $t('profile.personalInformation') }}
                                 </CardTitle>
                                 <CardDescription>
-                                    View and manage your account details
+                                    {{ $t('profile.viewAndManage') }}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent class="space-y-8">
@@ -154,16 +155,16 @@ useHead({
                                         <Label
                                             for="name"
                                             class="text-sm font-medium text-gray-700 mb-2 block"
-                                        >Name</Label>
+                                        >{{ $t('auth.name') }}</Label>
                                         <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-base">
-                                            {{ authStore.currentUser?.name || 'Not provided' }}
+                                            {{ authStore.currentUser?.name || $t('profile.notProvided') }}
                                         </div>
                                     </div>
                                     <div>
                                         <Label
                                             for="email"
                                             class="text-sm font-medium text-gray-700 mb-2 block"
-                                        >Email Address</Label>
+                                        >{{ $t('profile.emailAddress') }}</Label>
                                         <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 text-base">
                                             {{ authStore.currentUser?.email }}
                                         </div>
@@ -179,10 +180,10 @@ useHead({
                                         </div>
                                         <div>
                                             <h4 class="text-sm font-medium text-blue-900 mb-1">
-                                                Account Information
+                                                {{ $t('profile.accountInformation') }}
                                             </h4>
                                             <p class="text-sm text-blue-700">
-                                                Your account allows you to sync up to 3 resumes to the cloud.
+                                                {{ $t('profile.accountInfoDescription') }}
                                             </p>
                                         </div>
                                     </div>
@@ -195,10 +196,10 @@ useHead({
                             <CardHeader>
                                 <CardTitle class="flex items-center gap-2">
                                     <Lock class="w-5 h-5" />
-                                    Change Password
+                                    {{ $t('auth.changePassword') }}
                                 </CardTitle>
                                 <CardDescription>
-                                    Update your password to keep your account secure
+                                    {{ $t('profile.updatePasswordDescription') }}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -217,7 +218,7 @@ useHead({
                                             </div>
                                             <div>
                                                 <h4 class="text-sm font-medium text-red-900 mb-2">
-                                                    Please fix the following errors:
+                                                    {{ $t('profile.pleaseFixErrors') }}
                                                 </h4>
                                                 <ul class="text-sm text-red-700 space-y-1">
                                                     <li
@@ -236,13 +237,13 @@ useHead({
                                         <Label
                                             for="current-password"
                                             class="text-sm font-medium text-gray-700"
-                                        >Current Password</Label>
+                                        >{{ $t('auth.currentPassword') }}</Label>
                                         <div class="relative mt-1">
                                             <Input
                                                 id="current-password"
                                                 v-model="passwordForm.currentPassword"
                                                 :type="showCurrentPassword ? 'text' : 'password'"
-                                                placeholder="Enter your current password"
+                                                :placeholder="$t('auth.enterCurrentPassword')"
                                                 class="pr-10"
                                                 :disabled="isChangingPassword"
                                                 required
@@ -269,13 +270,13 @@ useHead({
                                         <Label
                                             for="new-password"
                                             class="text-sm font-medium text-gray-700"
-                                        >New Password</Label>
+                                        >{{ $t('auth.newPassword') }}</Label>
                                         <div class="relative mt-1">
                                             <Input
                                                 id="new-password"
                                                 v-model="passwordForm.newPassword"
                                                 :type="showNewPassword ? 'text' : 'password'"
-                                                placeholder="Enter your new password"
+                                                :placeholder="$t('auth.enterNewPassword')"
                                                 class="pr-10"
                                                 :disabled="isChangingPassword"
                                                 required
@@ -297,7 +298,7 @@ useHead({
                                             </button>
                                         </div>
                                         <p class="mt-1 text-xs text-gray-500">
-                                            Password must be at least 8 characters long
+                                            {{ $t('auth.passwordMinLengthHint') }}
                                         </p>
                                     </div>
 
@@ -306,13 +307,13 @@ useHead({
                                         <Label
                                             for="confirm-password"
                                             class="text-sm font-medium text-gray-700"
-                                        >Confirm New Password</Label>
+                                        >{{ $t('auth.confirmNewPassword') }}</Label>
                                         <div class="relative mt-1">
                                             <Input
                                                 id="confirm-password"
                                                 v-model="passwordForm.confirmPassword"
                                                 :type="showConfirmPassword ? 'text' : 'password'"
-                                                placeholder="Confirm your new password"
+                                                :placeholder="$t('auth.confirmNewPassword')"
                                                 class="pr-10"
                                                 :disabled="isChangingPassword"
                                                 required
@@ -342,7 +343,7 @@ useHead({
                                             class="flex items-center gap-2"
                                         >
                                             <Lock class="w-4 h-4" />
-                                            {{ isChangingPassword ? 'Changing Password...' : 'Change Password' }}
+                                            {{ isChangingPassword ? $t('auth.changingPassword') : $t('auth.changePassword') }}
                                         </Button>
                                         <Button
                                             type="button"
@@ -350,7 +351,7 @@ useHead({
                                             :disabled="isChangingPassword"
                                             @click="passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' }; passwordErrors = []"
                                         >
-                                            Clear Form
+                                            {{ $t('auth.clearForm') }}
                                         </Button>
                                     </div>
                                 </form>
