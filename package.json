@@ -8,7 +8,7 @@
     "deploy:staging": "nuxt build && wrangler deploy --env staging",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "dev": "nuxt dev --host",
+    "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"

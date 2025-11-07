@@ -931,6 +931,23 @@ export const useResumeStore = defineStore('resume', {
                     };
                 }
             }
+
+            const serverResumeIds = new Set(serverResumes.map(r => r.id));
+            let orphanedCount = 0;
+
+            for (const [localId, localResume] of Object.entries(this.resumes)) {
+                if (localResume.serverId && !serverResumeIds.has(localResume.serverId)) {
+                    console.log(`Resume "${localResume.name}" (${localId}) was deleted from server, clearing serverId`);
+                    this.resumes[localId].serverId = undefined;
+                    this.resumes[localId].updatedAt = new Date().toISOString();
+                    orphanedCount++;
+                }
+            }
+
+            if (orphanedCount > 0 && import.meta.client) {
+                const { toast } = await import('vue-sonner');
+                toast.info(`${orphanedCount} resume${orphanedCount > 1 ? 's' : ''} removed from cloud sync`);
+            }
         },
         findLocalResumeByServerId(serverId: string): string | null {
             for (const [localId, resume] of Object.entries(this.resumes)) {
