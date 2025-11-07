@@ -8,7 +8,6 @@
         @add="resumeStore.addProject"
         @edit-title="(value) => resumeStore.updateSectionHeader('projects', value)"
     >
-        <!-- Column Placement Control -->
         <template #header-actions>
             <div
                 v-if="templateConfig.canMoveSection('projects')"
@@ -29,7 +28,6 @@
                 </select>
             </div>
         </template>
-
         <FormCard
             v-for="(project, index) in resumeStore.resumeData.projects"
             :key="index"
@@ -52,7 +50,6 @@
                         @update:model-value="(value) => resumeStore.updateProject(index, 'title', value)"
                     />
                 </div>
-
                 <div class="space-y-2">
                     <Label :for="`project-url-${index}`">{{ t('forms.projects.projectUrl') }}</Label>
                     <Input
@@ -63,7 +60,6 @@
                         @update:model-value="(value) => resumeStore.updateProject(index, 'url', value)"
                     />
                 </div>
-
                 <div class="space-y-2">
                     <Label :for="`project-description-${index}`">{{ t('forms.projects.description') }}</Label>
                     <Textarea
@@ -77,8 +73,6 @@
             </div>
         </FormCard>
     </FormContainer>
-
-    <!-- Confirmation Modal -->
     <ConfirmationModal
         :cancel-text="confirmation.cancelText.value"
         :confirm-text="confirmation.confirmText.value"

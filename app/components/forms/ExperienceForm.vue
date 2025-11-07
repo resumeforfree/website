@@ -38,7 +38,6 @@
                     />
                 </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="space-y-2">
                     <Label>{{ t('forms.experience.location') }}</Label>
@@ -57,7 +56,6 @@
                     />
                 </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="space-y-2">
                     <MonthYearPicker
@@ -89,7 +87,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <Label>{{ t('forms.experience.achievements') }}</Label>
@@ -102,7 +99,6 @@
                         {{ t('forms.experience.addAchievement') }}
                     </Button>
                 </div>
-
                 <div class="space-y-2">
                     <div
                         v-for="(_, achievementIndex) in experience.achievements"
@@ -185,7 +181,6 @@ import MonthYearPicker from '~/components/elements/MonthYearPicker.vue';
 import FormCard from '~/components/elements/FormCard.vue';
 import FormContainer from '~/components/elements/FormContainer.vue';
 
-// Use the store directly instead of prop drilling
 const resumeStore = useResumeStore();
 const { t } = useI18n();
 </script>

@@ -46,8 +46,6 @@
                 />
             </div>
         </div>
-
-        <!-- Contact Information Section -->
         <div class="mt-6 space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-2">
@@ -72,8 +70,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Profile/Summary Section -->
         <div class="mt-6 space-y-4">
             <EditableHeader
                 :value="t('forms.personalInfo.summary')"
@@ -89,8 +85,6 @@
                 />
             </div>
         </div>
-
-        <!-- Social Links Section -->
         <div class="mt-6 space-y-4">
             <div class="flex justify-between items-center">
                 <EditableHeader
@@ -106,7 +100,6 @@
                     {{ t('forms.personalInfo.addSocialLink') }}
                 </Button>
             </div>
-
             <div class="space-y-3">
                 <div
                     v-for="(link, linkIndex) in resumeStore.resumeData.socialLinks"
@@ -114,15 +107,12 @@
                     class="space-y-2"
                 >
                     <div class="flex items-center space-x-2 md:space-x-2">
-                        <!-- Platform Icon -->
                         <div class="flex-none">
                             <component
                                 :is="getPlatformIcon(link.platform)"
                                 class="w-5 h-5 text-gray-600"
                             />
                         </div>
-
-                        <!-- Platform Dropdown -->
                         <div class="w-32 md:w-40">
                             <select
                                 :value="link.platform"
@@ -138,8 +128,6 @@
                                 </option>
                             </select>
                         </div>
-
-                        <!-- URL Input -->
                         <div class="flex-1">
                             <Input
                                 :model-value="link.url"
@@ -148,8 +136,6 @@
                                 @update:model-value="(value) => resumeStore.updateSocialLink(linkIndex, 'url', value)"
                             />
                         </div>
-
-                        <!-- Custom Label (only for 'other' platform) -->
                         <div
                             v-if="link.platform === 'other'"
                             class="w-32"
@@ -160,8 +146,6 @@
                                 @update:model-value="(value) => resumeStore.updateSocialLink(linkIndex, 'customLabel', value)"
                             />
                         </div>
-
-                        <!-- Order Controls - Desktop -->
                         <div class="hidden md:flex items-center space-x-1">
                             <Button
                                 :disabled="linkIndex === 0"
@@ -188,7 +172,6 @@
                             </Button>
                         </div>
                     </div>
-                    <!-- Order Controls - Mobile -->
                     <div class="flex md:hidden items-center justify-center space-x-2">
                         <Button
                             :disabled="linkIndex === 0"
@@ -218,8 +201,6 @@
             </div>
         </div>
     </FormContainer>
-
-    <!-- Confirmation Modal -->
     <ConfirmationModal
         :cancel-text="confirmation.cancelText.value"
         :confirm-text="confirmation.confirmText.value"
@@ -270,12 +251,10 @@ const SOCIAL_PLATFORMS = computed(() => [
 
 const resumeStore = useResumeStore();
 const confirmation = useConfirmation();
-
 const getPlatformIcon = (platform: string) => {
     const found = SOCIAL_PLATFORMS.value.find(p => p.value === platform);
     return found?.icon || Link;
 };
-
 const handleRemoveSocialLink = async (index: number) => {
     const confirmed = await confirmation.confirm({
         title: 'Delete Social Link',
@@ -283,7 +262,6 @@ const handleRemoveSocialLink = async (index: number) => {
         confirmText: 'Delete',
         cancelText: 'Cancel',
     });
-
     if (confirmed) {
         resumeStore.removeSocialLink(index);
     }

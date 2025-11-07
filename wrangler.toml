@@ -6,21 +6,19 @@ compatibility_date = "2025-07-15"
 directory = ".output/public"
 binding = "ASSETS"
 
-# Build configuration
 [build]
 command = "npm run build"
 
-# Environment variables (optional)
-# [vars]
-# EXAMPLE_VAR = "example_value"
+[[d1_databases]]
+binding = "DB"
+database_name = "resume-builder-db"
+database_id = "18a06c90-6adb-4400-bbf5-85313c47df0a"
 
-# KV namespaces (if needed)
-# [[kv_namespaces]]
-# binding = "MY_KV"
-# id = "your-kv-namespace-id"
+[vars]
+ENVIRONMENT = "production"
+NUXT_PUBLIC_TURNSTILE_SITE_KEY = "0x4AAAAAABwL8wn1D3oP3pku"
 
-# D1 databases (if needed)
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "resume-db"
-# database_id = "your-database-id"
+[observability.logs]
+enabled = true
+
+invocation_logs = false

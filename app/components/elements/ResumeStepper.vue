@@ -1,15 +1,11 @@
 <template>
     <div>
-        <!-- Stepper Modal -->
         <div
             v-if="showStepper"
             class="fixed inset-0 z-50 flex items-center justify-center"
             @click="showStepper = false"
         >
-            <!-- Backdrop -->
             <div class="absolute inset-0 bg-black/50" />
-
-            <!-- Modal Content -->
             <div
                 class="relative bg-background border rounded-lg shadow-xl p-6 w-80 max-h-[80vh] overflow-y-auto"
                 @click.stop
@@ -26,9 +22,7 @@
                         <XIcon class="h-4 w-4" />
                     </Button>
                 </div>
-
                 <div class="space-y-3">
-                    <!-- Fixed sections -->
                     <button
                         v-for="(section, index) in fixedSections"
                         :key="section.id"
@@ -61,18 +55,15 @@
                             </div>
                         </div>
                     </button>
-
                     <div
                         v-for="(section, index) in orderableSections"
                         :key="section.id"
                         class="relative"
                     >
-                        <!-- Drop zone indicator -->
                         <div
                             v-if="dropZoneIndex === index && draggedIndex !== null && draggedIndex !== index"
                             class="absolute top-0 left-0 right-0 h-px bg-gray-400 rounded-full z-10 transition-all duration-200"
                         />
-
                         <div
                             :class="[
                                 isCurrentSection(section.id)
@@ -113,15 +104,11 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Drop zone indicator at bottom -->
                         <div
                             v-if="dropZoneIndex === index + 1 && draggedIndex !== null"
                             class="absolute bottom-0 left-0 right-0 h-px bg-gray-400 rounded-full z-10 transition-all duration-200"
                         />
                     </div>
-
-                    <!-- Drop zone for inserting at the end -->
                     <div
                         class="h-4 relative"
                         @dragover="onDragOver($event, orderableSections.length)"
@@ -149,10 +136,7 @@ interface Section {
     subtitle: string;
     orderable?: boolean;
 }
-
 const resumeStore = useResumeStore();
-
-// Fixed sections (non-orderable)
 const fixedSections = computed<Section[]>(() => [
     {
         id: 'personal-info',
@@ -161,8 +145,6 @@ const fixedSections = computed<Section[]>(() => [
         orderable: false,
     },
 ]);
-
-// Orderable sections with their current order
 const orderableSections = computed<Section[]>(() => {
     const sectionOrder = resumeStore.resumeData.sectionOrder;
     const sectionsData = [
@@ -223,18 +205,13 @@ const orderableSections = computed<Section[]>(() => {
             order: sectionOrder.certificates,
         },
     ];
-
     return sectionsData.sort((a, b) => a.order - b.order);
 });
-
-// Combined sections for display
 const sections = computed<Section[]>(() => [
     ...fixedSections.value,
     ...orderableSections.value,
 ]);
-
 const currentSection = ref<string>('personal-info');
-
 const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -247,26 +224,20 @@ const scrollToSection = (sectionId: string) => {
         showStepper.value = false;
     }
 };
-
 const isCurrentSection = (sectionId: string) => {
     return currentSection.value === sectionId;
 };
-
-// Drag and drop functionality
 const draggedIndex = ref<number | null>(null);
 const dropZoneIndex = ref<number | null>(null);
-
 const onDragStart = (event: DragEvent, index: number) => {
     const section = orderableSections.value[index];
     if (!section.orderable) return;
-
     draggedIndex.value = index;
     if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = 'move';
         event.dataTransfer.setData('text/html', event.target as Element);
     }
 };
-
 const onDragOver = (event: DragEvent, index: number) => {
     event.preventDefault();
     if (event.dataTransfer) {
@@ -274,49 +245,30 @@ const onDragOver = (event: DragEvent, index: number) => {
     }
     dropZoneIndex.value = index;
 };
-
 const onDrop = (event: DragEvent, dropIndex: number) => {
     event.preventDefault();
-
     if (draggedIndex.value === null) return;
-
     const dragIndex = draggedIndex.value;
     if (dragIndex === dropIndex) return;
-
-    // Get all sections in current order
     const sections = orderableSections.value;
     const draggedSection = sections[dragIndex];
-
     if (!draggedSection.orderable) return;
-
-    // Create new order by shifting sections
     const newOrder = { ...resumeStore.resumeData.sectionOrder };
-
-    // Create array of section IDs in current order
     const sectionIds = sections.map(s => s.id);
-
-    // Remove dragged item and insert at new position
     sectionIds.splice(dragIndex, 1);
     sectionIds.splice(dropIndex, 0, draggedSection.id);
-
-    // Reassign order values (starting from 1)
     sectionIds.forEach((sectionId, index) => {
         newOrder[sectionId as keyof typeof newOrder] = index + 1;
     });
-
     resumeStore.updateSectionOrder(newOrder);
     draggedIndex.value = null;
     dropZoneIndex.value = null;
 };
-
 const onDragEnd = () => {
     draggedIndex.value = null;
     dropZoneIndex.value = null;
 };
-
 const showStepper = defineModel<boolean>('showStepper', { default: false });
-
-// Watch for scroll position to update current section
 onMounted(() => {
     const observer = new IntersectionObserver(
         (entries) => {
@@ -331,14 +283,12 @@ onMounted(() => {
             rootMargin: '-20% 0px -20% 0px',
         },
     );
-
     sections.value.forEach((section) => {
         const element = document.getElementById(section.id);
         if (element) {
             observer.observe(element);
         }
     });
-
     onUnmounted(() => {
         observer.disconnect();
     });

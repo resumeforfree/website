@@ -4,7 +4,6 @@
             <h1 class="text-4xl font-bold text-black mb-8">
                 Contact Us
             </h1>
-
             <Card class="p-8">
                 <CardContent class="pt-0">
                     <p class="text-lg text-gray-700 leading-relaxed">
@@ -41,7 +40,6 @@ useHead({
             name: 'robots',
             content: 'index, follow',
         },
-        // Open Graph tags
         {
             property: 'og:type',
             content: 'website',
@@ -66,7 +64,6 @@ useHead({
             property: 'og:image',
             content: 'https://resumeforfree.com/og-image.png',
         },
-        // Twitter Card tags
         {
             name: 'twitter:card',
             content: 'summary_large_image',

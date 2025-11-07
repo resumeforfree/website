@@ -4,7 +4,6 @@
             <CardTitle class="flex justify-between items-center">
                 <span>{{ title }}</span>
                 <div class="flex items-center gap-2">
-                    <!-- Move Up/Down buttons -->
                     <div
                         v-if="canMoveUp || canMoveDown"
                         class="flex items-center gap-1"
@@ -26,7 +25,6 @@
                             <ChevronDown class="w-4 h-4" />
                         </Button>
                     </div>
-                    <!-- Delete button -->
                     <Button
                         size="sm"
                         variant="outline"
@@ -41,7 +39,6 @@
             <slot />
         </CardContent>
     </Card>
-
     <ConfirmationModal
         :cancel-text="confirmation.cancelText.value"
         :confirm-text="confirmation.confirmText.value"
@@ -66,22 +63,18 @@ interface Props {
     canMoveUp?: boolean;
     canMoveDown?: boolean;
 }
-
 const props = withDefaults(defineProps<Props>(), {
     confirmTitle: 'Delete Item',
     confirmMessage: 'Are you sure you want to delete this item? This action cannot be undone.',
     canMoveUp: false,
     canMoveDown: false,
 });
-
 const emit = defineEmits<{
     'remove': [];
     'move-up': [];
     'move-down': [];
 }>();
-
 const confirmation = useConfirmation();
-
 const handleRemove = async () => {
     const confirmed = await confirmation.confirm({
         title: props.confirmTitle,
@@ -89,7 +82,6 @@ const handleRemove = async () => {
         confirmText: 'Delete',
         cancelText: 'Cancel',
     });
-
     if (confirmed) {
         emit('remove');
     }

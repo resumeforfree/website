@@ -20,7 +20,6 @@ useHead({
             name: 'author',
             content: 'Resume Builder',
         },
-        // Open Graph tags
         {
             property: 'og:type',
             content: 'website',
@@ -57,7 +56,6 @@ useHead({
             property: 'og:locale',
             content: 'en_US',
         },
-        // Twitter Card tags
         {
             name: 'twitter:card',
             content: 'summary_large_image',
@@ -74,7 +72,6 @@ useHead({
             name: 'twitter:image',
             content: 'https://resumeforfree.com/og-image.png',
         },
-        // Additional SEO tags
         {
             name: 'application-name',
             content: 'Resume Builder',
@@ -113,21 +110,26 @@ useHead({
 
 <template>
     <main class="min-h-screen flex flex-col items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
-        <!-- Hero Section -->
         <div class="text-center">
             <h1 class="text-6xl font-bold text-black mb-16">
                 {{ t('homepage.title') }}<br>
                 <span class="text-gray-600">{{ t('homepage.subtitle') }}</span>
             </h1>
-
-            <NuxtLink to="/builder">
+            <NuxtLink to="/resumes">
                 <Button size="lg">
                     {{ t('common.buildNow') }}
                 </Button>
             </NuxtLink>
+            <p class="text-xs text-gray-500 mt-4">
+                By using this website you agree to
+                <NuxtLink
+                    to="/terms"
+                    class="text-blue-600 hover:text-blue-800 underline"
+                >
+                    terms and conditions
+                </NuxtLink>
+            </p>
         </div>
-
-        <!-- Features Grid -->
         <div class="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto mt-16">
             <div class="text-center">
                 <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -140,7 +142,6 @@ useHead({
                     {{ t('homepage.features.free.description') }}
                 </p>
             </div>
-
             <div class="text-center">
                 <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Shield class="w-6 h-6 text-blue-600" />
@@ -152,7 +153,6 @@ useHead({
                     {{ t('homepage.features.noServers.description') }}
                 </p>
             </div>
-
             <div class="text-center">
                 <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Users class="w-6 h-6 text-purple-600" />
@@ -164,7 +164,6 @@ useHead({
                     {{ t('homepage.features.noRegistration.description') }}
                 </p>
             </div>
-
             <div class="text-center">
                 <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Download class="w-6 h-6 text-orange-600" />
@@ -176,7 +175,6 @@ useHead({
                     {{ t('homepage.features.unlimitedDownloads.description') }}
                 </p>
             </div>
-
             <div class="text-center">
                 <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <FileText class="w-6 h-6 text-red-600" />
@@ -188,7 +186,6 @@ useHead({
                     {{ t('homepage.features.unlimitedResumes.description') }}
                 </p>
             </div>
-
             <div class="text-center">
                 <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
                     <Zap class="w-6 h-6 text-indigo-600" />

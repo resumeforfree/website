@@ -1,5 +1,8 @@
 <script lang="ts" setup>
-import { Edit, FileText, Github, HelpCircle, Mail } from 'lucide-vue-next';
+import { Edit, FileText, Github, HelpCircle, Mail, LogOut, User } from 'lucide-vue-next';
+import { Toaster } from '@/components/ui/sonner';
+import { Button } from '@/components/ui/button';
+import 'vue-sonner/style.css';
 import { getDefaultFontForLanguage } from '~/types/resume';
 
 const { t, locale, setLocale } = useI18n();
@@ -17,11 +20,18 @@ const switchLanguage = (newLocale: string) => {
         settingsStore.setSelectedFont(newDefaultFont);
     }
 };
+
+const authStore = useAuthStore();
+const handleLogout = async () => {
+    await authStore.logout();
+};
+onMounted(async () => {
+    await authStore.initializeAuth();
+});
 </script>
 
 <template>
     <div class="min-h-screen bg-white flex flex-col">
-        <!-- Navigation -->
         <nav class="border-b border-gray-200">
             <div class="px-4 lg:px-8">
                 <div class="flex justify-between items-center h-16">
@@ -33,7 +43,6 @@ const switchLanguage = (newLocale: string) => {
                                 >{{ t('homepage.heroTitle').split(' - ')[0] }}</span>
                             </div>
                         </NuxtLink>
-
                         <div class="flex items-center space-x-4">
                             <NuxtLink
                                 class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -42,7 +51,6 @@ const switchLanguage = (newLocale: string) => {
                                 <FileText class="w-4 h-4" />
                                 <span class="hidden sm:inline text-sm font-medium">{{ t('navigation.resumes', 'Your Resumes') }}</span>
                             </NuxtLink>
-
                             <NuxtLink
                                 class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
                                 to="/builder"
@@ -52,8 +60,45 @@ const switchLanguage = (newLocale: string) => {
                             </NuxtLink>
                         </div>
                     </div>
-
                     <div class="flex items-center space-x-2 md:space-x-6">
+                        <template v-if="!authStore.isLoggedIn">
+                            <NuxtLink to="/auth/login">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    class="text-gray-600 hover:text-gray-900"
+                                >
+                                    <User class="w-4 h-4 mr-1" />
+                                    <span class="hidden sm:inline">Sign In</span>
+                                </Button>
+                            </NuxtLink>
+                            <NuxtLink to="/auth/register">
+                                <Button
+                                    size="sm"
+                                >
+                                    <span class="text-sm">Sign Up</span>
+                                </Button>
+                            </NuxtLink>
+                        </template>
+                        <template v-else>
+                            <NuxtLink
+                                to="/profile"
+                                class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                            >
+                                <User class="w-4 h-4" />
+                                <span class="hidden sm:inline">{{ authStore.currentUser?.name || authStore.currentUser?.email }}</span>
+                            </NuxtLink>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                class="text-gray-600 hover:text-gray-900"
+                                @click="handleLogout"
+                            >
+                                <LogOut class="w-4 h-4 mr-1" />
+                                <span class="hidden sm:inline">Sign Out</span>
+                            </Button>
+                        </template>
+                        <div class="h-4 w-px bg-gray-300 hidden md:block" />
                         <NuxtLink
                             class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
                             to="/contact"
@@ -61,7 +106,6 @@ const switchLanguage = (newLocale: string) => {
                             <Mail class="w-4 h-4" />
                             <span class="hidden sm:inline text-sm font-medium">{{ t('navigation.contact', 'Contact') }}</span>
                         </NuxtLink>
-
                         <NuxtLink
                             class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
                             target="_blank"
@@ -70,7 +114,6 @@ const switchLanguage = (newLocale: string) => {
                             <HelpCircle class="w-4 h-4" />
                             <span class="hidden sm:inline text-sm font-medium">{{ t('navigation.qa') }}</span>
                         </NuxtLink>
-
                         <a
                             class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
                             href="https://github.com/imkonsowa/resume-builder"
@@ -100,13 +143,9 @@ const switchLanguage = (newLocale: string) => {
                 </div>
             </div>
         </nav>
-
-        <!-- Page Content -->
         <main class="flex-1">
             <slot />
         </main>
-
-        <!-- Footer -->
         <footer
             v-if="$route.path !== '/builder'"
             class="bg-gray-50 border-t border-gray-200 mt-auto"
@@ -141,8 +180,8 @@ const switchLanguage = (newLocale: string) => {
                 </div>
             </div>
         </footer>
+        <ClientOnly>
+            <Toaster position="top-right" />
+        </ClientOnly>
     </div>
 </template>
-
-<style scoped>
-</style>

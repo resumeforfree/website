@@ -8,7 +8,6 @@ export interface Experience {
     isPresent?: boolean;
     achievements: Array<{ text: string }>;
 }
-
 export interface Internship {
     company: string;
     position: string;
@@ -19,7 +18,6 @@ export interface Internship {
     isPresent?: boolean;
     achievements: Array<{ text: string }>;
 }
-
 export interface Education {
     institution: string;
     degree: string;
@@ -31,7 +29,6 @@ export interface Education {
     description: string;
     graduationScore?: string;
 }
-
 export interface Volunteering {
     organization: string;
     position: string;
@@ -41,29 +38,24 @@ export interface Volunteering {
     isPresent?: boolean;
     achievements: Array<{ text: string }>;
 }
-
 export interface SkillItem {
     title: string;
     description: string;
 }
-
 export interface SocialLink {
     platform: string;
     url: string;
     customLabel?: string;
 }
-
 export interface Project {
     title: string;
     url: string;
     description: string;
 }
-
 export interface Language {
     name: string;
     proficiency: string;
 }
-
 export interface Certificate {
     title: string;
     issuer: string;
@@ -71,7 +63,6 @@ export interface Certificate {
     url?: string;
     description?: string;
 }
-
 export interface SectionOrder {
     summary: number;
     experience: number;
@@ -84,14 +75,12 @@ export interface SectionOrder {
     languages: number;
     certificates: number;
 }
-
 export interface TemplateLayoutConfig {
     isTwoColumn: boolean;
     leftColumnRatio?: string;
     rightColumnRatio?: string;
     movableSections?: string[];
 }
-
 export interface SectionPlacement {
     skills: 'left' | 'right';
     projects: 'left' | 'right';
@@ -99,7 +88,6 @@ export interface SectionPlacement {
     languages: 'left' | 'right';
     certificates: 'left' | 'right';
 }
-
 export interface SectionHeaders {
     personalInfo: string;
     profile: string;
@@ -114,7 +102,6 @@ export interface SectionHeaders {
     volunteering: string;
     certificates: string;
 }
-
 export interface ResumeData {
     version: string;
     firstName: string;
@@ -124,7 +111,6 @@ export interface ResumeData {
     position: string;
     location: string;
     summary: string;
-
     experiences: Experience[];
     internships: Internship[];
     education: Education[];
@@ -134,29 +120,25 @@ export interface ResumeData {
     projects: Project[];
     languages: Language[];
     certificates: Certificate[];
-
     technicalSkills: string;
     softSkills: string;
-
     sectionOrder: SectionOrder;
     sectionHeaders: SectionHeaders;
     sectionPlacement: SectionPlacement;
 }
-
 export interface Resume {
     id: string;
     name: string;
     data: ResumeData;
     createdAt: string;
     updatedAt: string;
+    serverId?: string;
 }
-
 export interface MultiResumeState {
     resumes: Record<string, Resume>;
     activeResumeId: string | null;
     nextId: number;
 }
-
 export interface AppSettings {
     selectedFont: string;
     selectedTemplate: string;
@@ -167,7 +149,6 @@ export interface AppSettings {
     fontSize: number;
     sectionCollapsed: Record<string, boolean>;
 }
-
 export const defaultResumeData: ResumeData = {
     version: 'v1',
     firstName: '',
@@ -222,7 +203,6 @@ export const defaultResumeData: ResumeData = {
         certificates: 'right',
     },
 };
-
 export const defaultAppSettings: AppSettings = {
     selectedFont: 'Calibri',
     selectedTemplate: 'default',

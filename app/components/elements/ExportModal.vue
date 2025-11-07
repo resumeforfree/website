@@ -4,10 +4,7 @@
         class="fixed inset-0 z-50 flex items-center justify-center"
         @click="handleBackdropClick"
     >
-        <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/50" />
-
-        <!-- Modal Content -->
         <div
             class="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
             @click.stop
@@ -20,8 +17,6 @@
                     Select resumes to export as JSON
                 </p>
             </div>
-
-            <!-- Warning about JSON vs PDF -->
             <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
                 <div class="flex">
                     <Info class="h-5 w-5 text-blue-600 flex-shrink-0" />
@@ -33,8 +28,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Select All Checkbox -->
             <div class="mb-4 pb-2 border-b">
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input
@@ -46,8 +39,6 @@
                     <span class="text-sm font-medium">Select All</span>
                 </label>
             </div>
-
-            <!-- Resume List -->
             <div class="space-y-2 max-h-60 overflow-y-auto mb-6">
                 <label
                     v-for="resume in resumes"
@@ -70,13 +61,9 @@
                     </div>
                 </label>
             </div>
-
-            <!-- Selected Count -->
             <div class="text-sm text-gray-600 mb-4">
                 {{ selectedResumes.length }} resume{{ selectedResumes.length !== 1 ? 's' : '' }} selected
             </div>
-
-            <!-- Action Buttons -->
             <div class="flex justify-end gap-3">
                 <Button
                     variant="outline"
@@ -104,26 +91,19 @@ interface Props {
     isOpen: boolean;
     resumes: Resume[];
 }
-
 const props = defineProps<Props>();
-
 const emit = defineEmits<{
     close: [];
     export: [resumeIds: string[]];
 }>();
-
 const selectedResumes = ref<string[]>([]);
 const selectAll = ref(true);
-
-// Initialize with all resumes selected
 watch(() => props.isOpen, (newVal) => {
     if (newVal) {
         selectedResumes.value = props.resumes.map(r => r.id);
         selectAll.value = true;
     }
 });
-
-// Handle select all
 const handleSelectAll = () => {
     if (selectAll.value) {
         selectedResumes.value = props.resumes.map(r => r.id);
@@ -132,25 +112,18 @@ const handleSelectAll = () => {
         selectedResumes.value = [];
     }
 };
-
-// Watch selected resumes to update select all checkbox
 watch(selectedResumes, (newVal) => {
     selectAll.value = newVal.length === props.resumes.length && props.resumes.length > 0;
 });
-
 const handleBackdropClick = () => {
     emit('close');
 };
-
 const handleCancel = () => {
     emit('close');
 };
-
 const handleExport = () => {
     emit('export', selectedResumes.value);
 };
-
-// Format date
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',

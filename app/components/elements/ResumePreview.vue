@@ -1,16 +1,12 @@
 <template>
     <ClientOnly>
         <div>
-            <!-- Preview Controls -->
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-xl font-semibold">
                     <span class="hidden md:inline">Preview</span>
                     <span class="md:hidden text-base">{{ activeResume?.name }}</span>
                 </h2>
-
-                <!-- Desktop Controls -->
                 <div class="hidden md:flex items-center space-x-3">
-                    <!-- Zoom Controls for mid-size screens -->
                     <div class="zoom-controls-midscreen">
                         <ZoomControls
                             :max-zoom="maxZoom"
@@ -21,8 +17,6 @@
                             @zoom-out="handleZoomOut"
                         />
                     </div>
-
-                    <!-- Template Selection - Hidden on mid screens -->
                     <div class="template-selection-desktop">
                         <Popover v-model:open="showTemplateMenu">
                             <PopoverTrigger as-child>
@@ -59,8 +53,6 @@
                             </PopoverContent>
                         </Popover>
                     </div>
-
-                    <!-- Settings Button -->
                     <Button
                         class="h-9"
                         size="sm"
@@ -70,8 +62,6 @@
                         <SlidersHorizontal class="w-4 h-4 mr-2" />
                         Settings
                     </Button>
-
-                    <!-- Download Button Group -->
                     <div class="flex items-center">
                         <Button
                             class="rounded-r-none h-9"
@@ -110,8 +100,6 @@
                         </Menubar>
                     </div>
                 </div>
-
-                <!-- Mobile Controls Button -->
                 <div class="md:hidden flex space-x-2">
                     <Button
                         class="h-9"
@@ -160,14 +148,10 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Preview Card -->
             <Card class="h-full">
                 <CardContent class="p-0">
-                    <!-- Preview Container -->
                     <div class="bg-gray-100 rounded-lg overflow-hidden h-full">
                         <div class="bg-white h-full min-h-[calc(100vh-200px)] flex flex-col">
-                            <!-- Loading State -->
                             <div
                                 v-if="isLoading"
                                 class="flex items-center justify-center flex-1"
@@ -191,8 +175,6 @@
                                     </p>
                                 </div>
                             </div>
-
-                            <!-- Error State -->
                             <div
                                 v-else-if="error"
                                 class="flex items-center justify-center flex-1"
@@ -230,22 +212,17 @@
                                     </Button>
                                 </div>
                             </div>
-
-                            <!-- Preview Content -->
                             <div
                                 v-else-if="previewContent"
                                 class="flex-1 overflow-auto p-4"
                             >
                                 <div class="preview-container flex justify-center min-h-full">
-                                    <!-- eslint-disable-next-line vue/no-v-html -->
                                     <div
                                         class="resume-preview-wrapper"
                                         v-html="previewContent"
                                     />
                                 </div>
                             </div>
-
-                            <!-- Typst Not Ready -->
                             <div
                                 v-else
                                 class="flex items-center justify-center flex-1"
@@ -280,8 +257,6 @@
                     </div>
                 </CardContent>
             </Card>
-
-            <!-- Settings Modal -->
             <SettingsModal v-model="showSettingsModal" />
         </div>
     </ClientOnly>
@@ -302,66 +277,41 @@ import { useSettingsStore } from '~/stores/settings';
 import { useResumeStore } from '~/stores/resume';
 import { storeToRefs } from 'pinia';
 
-// No props needed - we'll use stores directly
-
 const { generatePreview, downloadPDF, downloadSVG, downloadTypst, downloadTypstText } = useResumeGenerator();
 const { isReady: typstReady } = useTypstLoader();
-
-// Store instances
 const settingsStore = useSettingsStore();
 const resumeStore = useResumeStore();
-
-// Reactive store data
 const { resumeData, activeResume } = storeToRefs(resumeStore);
 const { selectedFont, selectedTemplate, fontSize } = storeToRefs(settingsStore);
-
-// State for preview
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const previewContent = ref<string>('');
-
-// State for popover menus
 const showTemplateMenu = ref(false);
-
-// State for settings modal
 const showSettingsModal = ref(false);
-
-// Zoom state for mid-size screens
 const zoomLevel = ref(1);
 const minZoom = 0.5;
 const maxZoom = 2.5;
 const zoomStep = 0.25;
-
-// Zoom control functions
 const handleZoomIn = () => {
     if (zoomLevel.value < maxZoom) {
         zoomLevel.value = Math.min(zoomLevel.value + zoomStep, maxZoom);
     }
 };
-
 const handleZoomOut = () => {
     if (zoomLevel.value > minZoom) {
         zoomLevel.value = Math.max(zoomLevel.value - zoomStep, minZoom);
     }
 };
-
-// Handler functions to close popovers after selection
 const handleTemplateSelect = (template: string) => {
     settingsStore.setSelectedTemplate(template);
     showTemplateMenu.value = false;
 };
-
-// Generate preview when data changes
 const generatePreviewInternal = async () => {
     if (!resumeData.value) return;
-
     isLoading.value = true;
     error.value = null;
-
     try {
-        // Wait for Typst to be ready
         if (!typstReady.value) {
-            // Wait for initialization to complete
             await new Promise((resolve) => {
                 const unwatch = watch(
                     typstReady,
@@ -374,11 +324,9 @@ const generatePreviewInternal = async () => {
                 );
             });
         }
-
         if (!typstReady.value) {
             return;
         }
-
         previewContent.value = await generatePreview(
             resumeData.value,
             selectedTemplate.value || 'default',
@@ -393,11 +341,8 @@ const generatePreviewInternal = async () => {
         isLoading.value = false;
     }
 };
-
-// Handle PDF download
 const handleDownload = async () => {
     if (!resumeData.value) return;
-
     try {
         await downloadPDF(
             resumeData.value,
@@ -410,11 +355,8 @@ const handleDownload = async () => {
         console.error('PDF download error:', err);
     }
 };
-
-// Handle SVG download
 const handleDownloadSVG = async () => {
     if (!resumeData.value) return;
-
     try {
         await downloadSVG(
             resumeData.value,
@@ -427,11 +369,8 @@ const handleDownloadSVG = async () => {
         console.error('SVG download error:', err);
     }
 };
-
-// Handle Typst download
 const handleDownloadTypst = () => {
     if (!resumeData.value) return;
-
     try {
         downloadTypst(
             resumeData.value,
@@ -444,11 +383,8 @@ const handleDownloadTypst = () => {
         console.error('Typst download error:', err);
     }
 };
-
-// Handle Typst text download
 const handleDownloadTypstText = () => {
     if (!resumeData.value) return;
-
     try {
         downloadTypstText(
             resumeData.value,
@@ -461,12 +397,9 @@ const handleDownloadTypstText = () => {
         console.error('Typst text download error:', err);
     }
 };
-
-// Watch for changes and regenerate preview with debounce
 const debouncedGeneratePreview = useDebounceFn(() => {
     generatePreviewInternal();
 }, 100);
-
 watch(
     [resumeData, selectedTemplate, selectedFont, fontSize],
     () => {
@@ -474,40 +407,29 @@ watch(
     },
     { deep: true, immediate: true },
 );
-
-// Expose generatePreview for error retry
 defineExpose({
     generatePreview: generatePreviewInternal,
 });
 </script>
 
 <style scoped>
-    /* ==================================
-       Base Styles (Mobile First)
+    /* Base Styles (Mobile First)
        ================================== */
-
-    /* Common styles for all screen sizes */
     .resume-preview-wrapper :deep(svg) + :deep(svg) {
         margin-top: 16px; /* Space between pages */
     }
-
     .preview-container {
         min-width: 100%;
         display: flex;
         justify-content: flex-start;
     }
-
-    /* Default visibility states */
     .zoom-controls-midscreen {
         display: none;
     }
-
     .template-selection-desktop {
         display: none !important;
     }
-
-    /* ==================================
-       Mobile: < 1024px
+    /* Mobile: < 1024px
        ================================== */
     @media (max-width: 1023px) {
         .resume-preview-wrapper :deep(svg) {
@@ -521,37 +443,29 @@ defineExpose({
             box-shadow: none !important;
             border-radius: 0;
         }
-
         .resume-preview-wrapper {
             width: 100%;
             padding: 0;
             min-width: auto;
         }
     }
-
-    /* ==================================
-       Small Desktop: 900px - 1024px
+    /* Small Desktop: 900px - 1024px
        ================================== */
     @media (min-width: 900px) and (max-width: 1023px) {
         .download-text {
             display: none;
         }
     }
-
-    /* ==================================
-       Desktop: >= 1024px
+    /* Desktop: >= 1024px
        ================================== */
     @media (min-width: 1024px) {
         .preview-container {
             justify-content: center;
         }
     }
-
-    /* ==================================
-       Medium Desktop: 1024px - 1600px
+    /* Medium Desktop: 1024px - 1600px
        ================================== */
     @media (min-width: 1024px) and (max-width: 1600px) {
-        /* Resume preview with zoom support */
         .resume-preview-wrapper :deep(svg) {
             width: 100% !important;
             max-width: 100% !important;
@@ -566,33 +480,24 @@ defineExpose({
             transform-origin: top left;
             transition: transform 0.2s ease-in-out;
         }
-
         .resume-preview-wrapper {
             width: max-content;
             padding: 8px;
             margin: 0;
         }
-
         .preview-container {
             justify-content: flex-start;
         }
-
-        /* Show zoom controls */
         .zoom-controls-midscreen {
             display: flex;
         }
-
-        /* Hide download text */
         .download-text {
             display: none;
         }
     }
-
-    /* ==================================
-       Large Desktop: > 1600px
+    /* Large Desktop: > 1600px
        ================================== */
     @media (min-width: 1601px) {
-        /* Fixed A4 size preview */
         .resume-preview-wrapper :deep(svg) {
             width: 794px !important; /* A4 width at 96 DPI */
             height: auto !important;
@@ -604,13 +509,10 @@ defineExpose({
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-radius: 4px;
         }
-
         .resume-preview-wrapper {
             min-width: 810px; /* SVG width + padding */
             padding: 8px;
         }
-
-        /* Show template selection */
         .template-selection-desktop {
             display: block !important;
         }

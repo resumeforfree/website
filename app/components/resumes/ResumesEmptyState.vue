@@ -1,6 +1,5 @@
 <template>
     <div class="text-center py-16">
-        <!-- No Resumes State -->
         <div v-if="type === 'no-resumes'">
             <FileText class="w-24 h-24 text-gray-300 mx-auto mb-4" />
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">
@@ -16,8 +15,6 @@
                 Create Your First Resume
             </Button>
         </div>
-
-        <!-- No Search Results State -->
         <div v-else-if="type === 'no-search-results'">
             <Search class="w-24 h-24 text-gray-300 mx-auto mb-4" />
             <h2 class="text-2xl font-semibold text-gray-900 mb-2">
@@ -49,9 +46,7 @@ interface Props {
     type: 'no-resumes' | 'no-search-results';
     searchQuery?: string;
 }
-
 defineProps<Props>();
-
 defineEmits<{
     'create': [];
     'clear-search': [];

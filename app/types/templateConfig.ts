@@ -9,32 +9,26 @@ export interface SectionContent {
     links?: string[];
     additionalInfo?: string;
 }
-
 export interface TemplateLayoutConfig {
     layout: 'single-column' | 'two-column';
-
     sections: {
         spacing: 'block' | 'joined';
         itemSpacing: string;
         joinSeparator: string;
     };
-
     socialLinks: {
         orientation: 'vertical' | 'horizontal';
         placement: 'header' | 'sidebar' | 'section';
         separator: string;
     };
-
     header: {
         style: 'simple' | 'grid';
         includeContact: boolean;
     };
-
     projects: {
         itemSpacing: string;
     };
 }
-
 export const DEFAULT_LAYOUT_CONFIG: TemplateLayoutConfig = {
     layout: 'two-column',
     sections: {
@@ -55,7 +49,6 @@ export const DEFAULT_LAYOUT_CONFIG: TemplateLayoutConfig = {
         itemSpacing: HEADER_SPACING,
     },
 };
-
 export const COMPACT_LAYOUT_CONFIG: TemplateLayoutConfig = {
     layout: 'single-column',
     sections: {
@@ -76,5 +69,4 @@ export const COMPACT_LAYOUT_CONFIG: TemplateLayoutConfig = {
         itemSpacing: '',
     },
 };
-
 export type SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig) => string;

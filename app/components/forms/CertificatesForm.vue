@@ -5,11 +5,10 @@
         :add-button-label="t('forms.certificates.addCertificate')"
         :empty-message="t('forms.certificates.emptyMessage')"
         section-key="certificates"
-        :collapsible="true"
+        collapsible
         @add="resumeStore.addCertificate"
         @edit-title="(value) => resumeStore.updateSectionHeader('certificates', value)"
     >
-        <!-- Column Placement Control -->
         <template #header-actions>
             <div
                 v-if="templateConfig.canMoveSection('certificates')"
@@ -30,7 +29,6 @@
                 </select>
             </div>
         </template>
-
         <FormCard
             v-for="(certificate, index) in (resumeStore.resumeData.certificates || [])"
             :key="index"
@@ -53,7 +51,6 @@
                         @update:model-value="(value) => resumeStore.updateCertificate(index, 'title', value)"
                     />
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                         <Label :for="`certificate-issuer-${index}`">{{ t('forms.certificates.issuer') }}</Label>
@@ -64,7 +61,6 @@
                             @update:model-value="(value) => resumeStore.updateCertificate(index, 'issuer', value)"
                         />
                     </div>
-
                     <div class="space-y-2">
                         <MonthYearPicker
                             :model-value="certificate.date"
@@ -73,7 +69,6 @@
                         />
                     </div>
                 </div>
-
                 <div class="space-y-2">
                     <Label :for="`certificate-url-${index}`">{{ t('forms.certificates.url') }}</Label>
                     <Input
@@ -84,7 +79,6 @@
                         @update:model-value="(value) => resumeStore.updateCertificate(index, 'url', value)"
                     />
                 </div>
-
                 <div class="space-y-2">
                     <Label :for="`certificate-description-${index}`">{{ t('forms.certificates.description') }}</Label>
                     <Textarea
@@ -98,8 +92,6 @@
             </div>
         </FormCard>
     </FormContainer>
-
-    <!-- Confirmation Modal -->
     <ConfirmationModal
         :cancel-text="confirmation.cancelText.value"
         :confirm-text="confirmation.confirmText.value"

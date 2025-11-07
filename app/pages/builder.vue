@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useResumeStore } from '~/stores/resume';
-import { EyeIcon } from 'lucide-vue-next';
+import { EyeIcon, FileText } from 'lucide-vue-next';
 import { Button } from '~/components/ui/button';
 import ZoomControls from '~/components/elements/ZoomControls.vue';
 import ResumeBuilderHeader from '~/components/elements/ResumeBuilderHeader.vue';
@@ -14,6 +14,9 @@ import LanguagesForm from '~/components/forms/LanguagesForm.vue';
 import VolunteeringForm from '~/components/forms/VolunteeringForm.vue';
 import CertificatesForm from '~/components/forms/CertificatesForm.vue';
 import ResumePreview from '~/components/elements/ResumePreview.vue';
+import FirstTimeBuilderModal from '~/components/elements/FirstTimeBuilderModal.vue';
+import CloudSyncPromptModal from '~/components/elements/CloudSyncPromptModal.vue';
+import SyncIndicator from '~/components/elements/SyncIndicator.vue';
 
 const { t } = useI18n();
 
@@ -32,7 +35,6 @@ useHead({
             name: 'robots',
             content: 'index, follow',
         },
-        // Open Graph tags
         {
             property: 'og:type',
             content: 'website',
@@ -57,7 +59,6 @@ useHead({
             property: 'og:image',
             content: 'https://resumeforfree.com/og-image.png',
         },
-        // Twitter Card tags
         {
             name: 'twitter:card',
             content: 'summary_large_image',
@@ -82,63 +83,137 @@ useHead({
         },
     ],
 });
-
-// Stores
 const resumeStore = useResumeStore();
 const settingsStore = useSettingsStore();
-
-// Initialize Typst loader
+const authStore = useAuthStore();
+const { hasSeenModal, markModalSeen } = useModalSeen('firstTimeBuilder');
+const { startAutoSync, stopAutoSync, isSyncing, lastSyncSuccess, lastSyncTime, lastSyncError } = useAutoSync();
 useTypstLoader();
 
-// Initialize stores on mount
 onMounted(() => {
-    // Initialize settings first
     settingsStore.initialize();
-
-    // Then initialize resume store
     resumeStore.initialize();
 
-    // If no resumes exist and user accessed builder directly, create "Your Resume"
-    if (resumeStore.resumeCount === 0) {
-        const newResumeId = resumeStore.createResume('Your Resume');
-        resumeStore.setActiveResume(newResumeId);
+    // Show first time modal for unauthenticated users
+    if (!hasSeenModal() && !authStore.isAuthenticated && resumeStore.resumeCount > 0) {
+        showFirstTimeModal.value = true;
+    }
+
+    // Check if should show cloud sync modal for authenticated users
+    if (authStore.isAuthenticated) {
+        startAutoSync();
+
+        // Check if active resume is not synced to cloud and prompt hasn't been dismissed
+        const activeResume = resumeStore.activeResume;
+        if (activeResume && !activeResume.serverId) {
+            const { isDismissed } = useCloudSyncPrompt(activeResume.id);
+            if (!isDismissed()) {
+                showCloudSyncModal.value = true;
+            }
+        }
+    }
+});
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+    if (isAuthenticated) {
+        startAutoSync();
+    }
+    else {
+        stopAutoSync();
     }
 });
 
-// Mobile preview modal state
+// Watch for active resume changes to check if we should show cloud sync modal
+watch(() => resumeStore.activeResumeId, (newResumeId) => {
+    if (newResumeId && authStore.isAuthenticated) {
+        const activeResume = resumeStore.activeResume;
+        if (activeResume && !activeResume.serverId) {
+            const { isDismissed } = useCloudSyncPrompt(activeResume.id);
+            if (!isDismissed()) {
+                showCloudSyncModal.value = true;
+            }
+        }
+    }
+});
 const showMobilePreview = ref(false);
-
-// Zoom state for mobile preview
+const showFirstTimeModal = ref(false);
+const showCloudSyncModal = ref(false);
 const zoomLevel = ref(1);
 const minZoom = 0.5;
 const maxZoom = 2.5;
 const zoomStep = 0.25;
-
-// Zoom control functions
 const zoomIn = () => {
     if (zoomLevel.value < maxZoom) {
         zoomLevel.value = Math.min(zoomLevel.value + zoomStep, maxZoom);
     }
 };
-
 const zoomOut = () => {
     if (zoomLevel.value > minZoom) {
         zoomLevel.value = Math.max(zoomLevel.value - zoomStep, minZoom);
     }
 };
-
 const resetZoom = () => {
     zoomLevel.value = 1;
 };
-
-// Reset zoom when closing modal
 watch(showMobilePreview, (newValue) => {
     if (!newValue) {
         resetZoom();
     }
 });
+const handleFirstTimeModalClose = () => {
+    showFirstTimeModal.value = false;
+};
+const handleContinueLocally = (dontShowAgain: boolean) => {
+    showFirstTimeModal.value = false;
+    if (dontShowAgain) {
+        markModalSeen();
+    }
+};
+const handleRegister = (dontShowAgain: boolean) => {
+    showFirstTimeModal.value = false;
+    if (dontShowAgain) {
+        markModalSeen();
+    }
+    navigateTo('/auth/register');
+};
+const handleLogin = (dontShowAgain: boolean) => {
+    showFirstTimeModal.value = false;
+    if (dontShowAgain) {
+        markModalSeen();
+    }
+    navigateTo('/auth/login');
+};
 
-// Section components mapping
+const handleCloudSyncModalClose = () => {
+    showCloudSyncModal.value = false;
+};
+
+const handleEnableSync = async (dontShowAgain: boolean) => {
+    showCloudSyncModal.value = false;
+
+    if (dontShowAgain && resumeStore.activeResumeId) {
+        const { dismissPrompt } = useCloudSyncPrompt(resumeStore.activeResumeId);
+        dismissPrompt();
+    }
+
+    // Sync the resume to the server (this will create it on the server if needed)
+    if (resumeStore.activeResumeId) {
+        try {
+            await resumeStore.syncResumeToServer(resumeStore.activeResumeId);
+        }
+        catch (error) {
+            console.error('Failed to enable cloud sync:', error);
+        }
+    }
+};
+
+const handleContinueWithoutSync = (dontShowAgain: boolean) => {
+    showCloudSyncModal.value = false;
+
+    if (dontShowAgain && resumeStore.activeResumeId) {
+        const { dismissPrompt } = useCloudSyncPrompt(resumeStore.activeResumeId);
+        dismissPrompt();
+    }
+};
 const sectionComponents = {
     experiences: ExperienceForm,
     internships: InternshipsForm,
@@ -149,18 +224,13 @@ const sectionComponents = {
     volunteering: VolunteeringForm,
     certificates: CertificatesForm,
 };
-
-// All section keys
 const allSections = Object.keys(sectionComponents);
-
-// Computed property for ordered sections
+const hasResumes = computed(() => resumeStore.resumeCount > 0);
+const hasActiveResume = computed(() => Boolean(resumeStore.activeResume));
 const orderedSections = computed(() => {
-    // Force reactivity by accessing the store getter
     const activeData = resumeStore.activeResumeData;
     if (!activeData?.sectionOrder) return allSections;
-
     const sectionOrder = activeData.sectionOrder;
-
     const leftSectionOrder = {
         experiences: sectionOrder.experience || 1,
         internships: sectionOrder.internships || 2,
@@ -171,7 +241,6 @@ const orderedSections = computed(() => {
         volunteering: sectionOrder.volunteering || 7,
         certificates: sectionOrder.certificates || 8,
     };
-
     return [...allSections].sort((a, b) => {
         return (leftSectionOrder[a as keyof typeof leftSectionOrder] || 999) - (leftSectionOrder[b as keyof typeof leftSectionOrder] || 999);
     });
@@ -181,17 +250,52 @@ const orderedSections = computed(() => {
 <template>
     <ClientOnly>
         <div class="bg-gray-50 min-h-screen">
-            <div class="flex flex-col lg:flex-row">
-                <!-- Left Panel - Form -->
+            <SyncIndicator
+                :is-syncing="isSyncing"
+                :last-sync-success="lastSyncSuccess"
+                :last-sync-time="lastSyncTime"
+                :error-message="lastSyncError"
+            />
+            <!-- Empty State: No Resumes -->
+            <div
+                v-if="!hasResumes || !hasActiveResume"
+                class="min-h-screen flex items-center justify-center p-4"
+            >
+                <div class="max-w-md w-full text-center space-y-6">
+                    <div class="space-y-4">
+                        <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                            <FileText class="w-8 h-8 text-blue-600" />
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-900 mb-2">
+                                No Resume Selected
+                            </h2>
+                            <p class="text-gray-600">
+                                To start building your resume, you need to create or select a resume first.
+                                Go to your resumes page to create your first resume.
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <NuxtLink to="/resumes">
+                            <Button class="w-full">
+                                <FileText class="w-4 h-4 mr-2" />
+                                Go to Resumes Page →
+                            </Button>
+                        </NuxtLink>
+                    </div>
+                </div>
+            </div>
+            <!-- Builder Content: When Resume Exists -->
+            <div
+                v-else
+                class="flex flex-col lg:flex-row"
+            >
                 <div class="w-full lg:w-1/2 min-h-screen">
                     <div class="p-4 lg:p-8 pb-32">
-                        <!-- Header -->
                         <ResumeBuilderHeader />
-
-                        <!-- Form Content -->
                         <div class="space-y-6">
                             <PersonalInfoForm />
-
                             <div
                                 v-for="sectionKey in orderedSections"
                                 :id="sectionKey === 'personal' ? 'personal-info' : sectionKey === 'experiences' ? 'experience' : sectionKey === 'technicalSkills' ? 'skills' : sectionKey"
@@ -202,8 +306,6 @@ const orderedSections = computed(() => {
                         </div>
                     </div>
                 </div>
-
-                <!-- Right Panel - Preview (Desktop) -->
                 <div
                     class="hidden lg:block fixed top-16 right-0 w-1/2 h-[calc(100vh-64px)] border-l border-gray-200 bg-gray-50 overflow-y-auto z-10"
                 >
@@ -213,8 +315,6 @@ const orderedSections = computed(() => {
                         </ClientOnly>
                     </div>
                 </div>
-
-                <!-- Mobile Preview Button -->
                 <Button
                     v-if="!showMobilePreview"
                     class="lg:hidden fixed bottom-6 right-6 z-40 h-14 px-4 rounded-full shadow-lg flex items-center space-x-2"
@@ -224,8 +324,6 @@ const orderedSections = computed(() => {
                     <EyeIcon class="h-5 w-5" />
                     <span class="text-sm font-medium">{{ t('common.preview') }}</span>
                 </Button>
-
-                <!-- Mobile Preview Modal -->
                 <div
                     v-if="showMobilePreview"
                     class="lg:hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50"
@@ -236,8 +334,6 @@ const orderedSections = computed(() => {
                                 <h3 class="text-lg font-medium">
                                     {{ t('builder.resumePreview') }}
                                 </h3>
-
-                                <!-- Zoom Controls -->
                                 <div class="flex items-center gap-2">
                                     <ZoomControls
                                         :max-zoom="maxZoom"
@@ -247,7 +343,6 @@ const orderedSections = computed(() => {
                                         @zoom-in="zoomIn"
                                         @zoom-out="zoomOut"
                                     />
-
                                     <button
                                         class="text-gray-400 hover:text-gray-600 p-2"
                                         @click="showMobilePreview = false"
@@ -269,8 +364,6 @@ const orderedSections = computed(() => {
                                     </button>
                                 </div>
                             </div>
-
-                            <!-- Scrollable content container -->
                             <div class="overflow-auto flex-1 p-4">
                                 <div class="mobile-preview-wrapper">
                                     <ResumePreview />
@@ -281,11 +374,23 @@ const orderedSections = computed(() => {
                 </div>
             </div>
         </div>
+        <FirstTimeBuilderModal
+            :is-open="showFirstTimeModal"
+            @close="handleFirstTimeModalClose"
+            @register="handleRegister"
+            @login="handleLogin"
+            @continue-locally="handleContinueLocally"
+        />
+        <CloudSyncPromptModal
+            :is-open="showCloudSyncModal"
+            @close="handleCloudSyncModalClose"
+            @enable-sync="handleEnableSync"
+            @continue-locally="handleContinueWithoutSync"
+        />
     </ClientOnly>
 </template>
 
 <style scoped>
-    /* Mobile preview zoom styles */
     .mobile-preview-wrapper :deep(.resume-preview-wrapper svg) {
         transform: scale(v-bind(zoomLevel));
         transform-origin: top left;
@@ -293,14 +398,10 @@ const orderedSections = computed(() => {
         margin: 0;
         display: block;
     }
-
-    /* When zoomed in, adjust the wrapper to allow horizontal scrolling */
     .mobile-preview-wrapper :deep(.resume-preview-wrapper) {
         width: max-content;
         margin: 0;
     }
-
-    /* Ensure preview container has proper dimensions */
     .mobile-preview-wrapper :deep(.preview-container) {
         display: flex;
         justify-content: flex-start;

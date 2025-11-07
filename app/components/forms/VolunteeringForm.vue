@@ -8,7 +8,6 @@
         @add="resumeStore.addVolunteering"
         @edit-title="(value) => resumeStore.updateSectionHeader('volunteering', value)"
     >
-        <!-- Column Placement Control -->
         <template #header-actions>
             <div
                 v-if="templateConfig.canMoveSection('volunteering')"
@@ -59,7 +58,6 @@
                     />
                 </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="space-y-2">
                     <Label>{{ t('forms.volunteering.location') }}</Label>
@@ -97,7 +95,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <Label>{{ t('forms.volunteering.achievements') }}</Label>
@@ -110,7 +107,6 @@
                         {{ t('forms.volunteering.addAchievement') }}
                     </Button>
                 </div>
-
                 <div class="space-y-2">
                     <div
                         v-for="(_, achievementIndex) in volunteering.achievements"
@@ -193,7 +189,6 @@ import MonthYearPicker from '~/components/elements/MonthYearPicker.vue';
 import FormCard from '~/components/elements/FormCard.vue';
 import FormContainer from '~/components/elements/FormContainer.vue';
 
-// Use the store directly instead of props
 const resumeStore = useResumeStore();
 const templateConfig = useTemplate();
 const { t } = useI18n();

@@ -7,7 +7,6 @@ export interface TypstLoaderState {
     error: string | null;
     hasInitialized: boolean;
 }
-
 class TypstLoader {
     private static instance: TypstLoader;
     private state: TypstLoaderState = {
@@ -19,7 +18,6 @@ class TypstLoader {
 
     private listeners = new Set<(state: TypstLoaderState) => void>();
     private initPromise: Promise<void> | null = null;
-
     static getInstance(): TypstLoader {
         if (!TypstLoader.instance) {
             TypstLoader.instance = new TypstLoader();
@@ -33,9 +31,7 @@ class TypstLoader {
 
     subscribe(listener: (state: TypstLoaderState) => void): () => void {
         this.listeners.add(listener);
-
         setTimeout(() => listener({ ...this.state }), 0);
-
         return () => {
             this.listeners.delete(listener);
         };
@@ -45,19 +41,14 @@ class TypstLoader {
         if (this.initPromise) {
             return this.initPromise;
         }
-
         if (this.state.isReady && this.state.hasInitialized) {
             return Promise.resolve();
         }
-
         if (this.state.isLoading) {
             return this.initPromise || Promise.resolve();
         }
-
         this.setState({ isLoading: true, error: null });
-
         this.initPromise = this.performInitialization();
-
         try {
             await this.initPromise;
             this.setState({
@@ -66,8 +57,6 @@ class TypstLoader {
                 error: null,
                 hasInitialized: true,
             });
-
-            // @ts-expect-error - Window object doesn't have $typst property in TypeScript definitions
             window.$typst = $typst;
         }
         catch (error) {
@@ -122,7 +111,6 @@ class TypstLoader {
     private async performInitialization(): Promise<void> {
         try {
             console.log('Initializing Typst...');
-
             $typst.setCompilerInitOptions({
                 getModule: async () => {
                     const wasmUrl = new URL('@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm', import.meta.url);
@@ -146,7 +134,6 @@ class TypstLoader {
                     ], { assets: false }),
                 ],
             });
-
             $typst.setRendererInitOptions({
                 getModule: async () => {
                     const wasmUrl = new URL('@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm', import.meta.url);
@@ -157,7 +144,6 @@ class TypstLoader {
                     return await wasmResponse.arrayBuffer();
                 },
             });
-
             console.log('Typst initialized successfully');
         }
         catch (error) {
@@ -166,5 +152,4 @@ class TypstLoader {
         }
     }
 }
-
 export const typstLoader = TypstLoader.getInstance();

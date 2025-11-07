@@ -4,10 +4,8 @@ import { compactTemplate } from '~/templates/compact';
 
 export const useTemplate = () => {
     const settingsStore = useSettingsStore();
-
     const getCurrentTemplate = (): Template => {
         const templateId = settingsStore.selectedTemplate;
-
         switch (templateId) {
             case 'default':
                 return defaultTemplate;
@@ -17,24 +15,19 @@ export const useTemplate = () => {
                 return defaultTemplate;
         }
     };
-
     const getCurrentLayoutConfig = (): TemplateLayoutConfig => {
         return getCurrentTemplate().layoutConfig;
     };
-
     const isCurrentTemplateTwoColumn = (): boolean => {
         return getCurrentLayoutConfig().isTwoColumn;
     };
-
     const getMovableSections = (): string[] => {
         return getCurrentLayoutConfig().movableSections || [];
     };
-
     const canMoveSection = (sectionName: string): boolean => {
         const movableSections = getMovableSections();
         return movableSections.includes(sectionName);
     };
-
     return {
         getCurrentTemplate,
         getCurrentLayoutConfig,

@@ -52,16 +52,12 @@ import { Check, Edit2, X } from 'lucide-vue-next';
 interface Props {
     value: string;
 }
-
 type Emits = (e: 'update', value: string) => void;
-
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
-
 const isEditing = ref(false);
 const localValue = ref(props.value);
 const inputRef = ref<HTMLInputElement>();
-
 const startEdit = async () => {
     localValue.value = props.value;
     isEditing.value = true;
@@ -69,14 +65,12 @@ const startEdit = async () => {
     inputRef.value?.focus();
     inputRef.value?.select();
 };
-
 const saveHeader = () => {
     if (localValue.value.trim() && localValue.value !== props.value) {
         emit('update', localValue.value.trim());
     }
     isEditing.value = false;
 };
-
 const cancelEdit = () => {
     localValue.value = props.value;
     isEditing.value = false;

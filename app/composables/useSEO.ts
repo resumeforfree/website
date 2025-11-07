@@ -1,5 +1,3 @@
-// Structured data generators for SEO
-
 export const createWebsiteStructuredData = () => ({
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -20,7 +18,6 @@ export const createWebsiteStructuredData = () => ({
         'url': 'https://resumeforfree.com',
     },
 });
-
 export const createSoftwareApplicationStructuredData = () => ({
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
@@ -52,7 +49,6 @@ export const createSoftwareApplicationStructuredData = () => ({
         'url': 'https://resumeforfree.com',
     },
 });
-
 export const createBreadcrumbStructuredData = (items: Array<{ name: string; url: string }>) => ({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -63,7 +59,6 @@ export const createBreadcrumbStructuredData = (items: Array<{ name: string; url:
         'item': item.url,
     })),
 });
-
 export const createFAQStructuredData = (faqs: Array<{ question: string; answer: string }>) => ({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

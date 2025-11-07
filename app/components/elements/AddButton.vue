@@ -14,7 +14,6 @@ import { Plus } from 'lucide-vue-next';
 interface Props {
     label: string;
 }
-
 defineProps<Props>();
 defineEmits<{
     click: [];

@@ -8,7 +8,6 @@
         @add="resumeStore.addLanguage"
         @edit-title="(value) => resumeStore.updateSectionHeader('languages', value)"
     >
-        <!-- Column Placement Control -->
         <template #header-actions>
             <div
                 v-if="templateConfig.canMoveSection('languages')"
@@ -29,7 +28,6 @@
                 </select>
             </div>
         </template>
-
         <FormCard
             v-for="(language, index) in resumeStore.resumeData.languages"
             :key="index"
@@ -52,7 +50,6 @@
                         @update:model-value="(value) => resumeStore.updateLanguage(index, 'name', value)"
                     />
                 </div>
-
                 <div class="space-y-2">
                     <Label :for="`language-proficiency-${index}`">{{ t('forms.languages.proficiency') }}</Label>
                     <select
@@ -87,8 +84,6 @@
             </div>
         </FormCard>
     </FormContainer>
-
-    <!-- Confirmation Modal -->
     <ConfirmationModal
         :cancel-text="confirmation.cancelText.value"
         :confirm-text="confirmation.confirmText.value"

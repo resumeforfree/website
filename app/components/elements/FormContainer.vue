@@ -46,12 +46,9 @@
             >
                 {{ props.emptyMessage }}
             </div>
-
             <div v-else>
                 <slot />
             </div>
-
-            <!-- Add Button at Bottom -->
             <div
                 v-if="props.showAddButton"
                 class="mt-6"
@@ -66,7 +63,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { Card, CardContent, CardHeader } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { ChevronDown } from 'lucide-vue-next';
 import AddButton from '~/components/elements/AddButton.vue';
@@ -82,26 +79,20 @@ interface Props {
     sectionKey?: string;
     collapsible?: boolean;
 }
-
 const props = withDefaults(defineProps<Props>(), {
     showAddButton: true,
     editable: true,
     collapsible: true,
 });
-
 const _emit = defineEmits<{
     'add': [];
     'edit-title': [value: string];
 }>();
-
 const settingsStore = useSettingsStore();
-
-// Collapse state management
 const isCollapsed = computed(() => {
     if (!props.collapsible || !props.sectionKey) return false;
     return settingsStore.sectionCollapsed[props.sectionKey] || false;
 });
-
 const toggleCollapse = () => {
     if (props.collapsible && props.sectionKey) {
         settingsStore.toggleSectionCollapse(props.sectionKey);

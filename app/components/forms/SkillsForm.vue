@@ -8,7 +8,6 @@
         @add="resumeStore.addSkill"
         @edit-title="(value) => resumeStore.updateSectionHeader('skills', value)"
     >
-        <!-- Column Placement Control -->
         <template #header-actions>
             <div
                 v-if="templateConfig.canMoveSection('skills')"
@@ -50,7 +49,6 @@
                         @update:model-value="(value) => resumeStore.updateSkill(index, 'title', value)"
                     />
                 </div>
-
                 <div class="space-y-2">
                     <Label>{{ t('forms.skills.description') }}</Label>
                     <Textarea
@@ -72,7 +70,6 @@ import { Textarea } from '~/components/ui/textarea';
 import FormCard from '~/components/elements/FormCard.vue';
 import FormContainer from '~/components/elements/FormContainer.vue';
 
-// Use the store directly instead of props
 const resumeStore = useResumeStore();
 const templateConfig = useTemplate();
 const { t } = useI18n();

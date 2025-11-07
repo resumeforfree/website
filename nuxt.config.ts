@@ -10,6 +10,8 @@ export default defineNuxtConfig({
         '@nuxt/eslint',
         '@vite-pwa/nuxt',
         '@nuxtjs/i18n',
+        'nitro-cloudflare-dev',
+        '@nuxtjs/turnstile',
     ],
 
     imports: {
@@ -42,12 +44,31 @@ export default defineNuxtConfig({
         description: 'Build professional resumes for free. No servers, no registration, no payments. Unlimited downloads and resumes with complete privacy.',
         defaultLocale: 'en',
     },
+
+    runtimeConfig: {
+        public: {
+            pocketbaseUrl: process.env.NODE_ENV === 'production'
+                ? 'https://api.resumeforfree.com'
+                : 'http://localhost:8010',
+            turnstile: {
+                siteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA',
+            },
+        },
+        turnstile: {
+            secretKey: process.env.NUXT_TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA',
+        },
+    },
     future: {
         compatibilityVersion: 4,
     },
     compatibilityDate: '2025-07-15',
     nitro: {
-        preset: 'cloudflare',
+        preset: 'cloudflare-module',
+        cloudflare: {
+            d1: {
+                DB: process.env.NODE_ENV === 'production' ? undefined : './dev.db',
+            },
+        },
     },
 
     vite: {
@@ -106,6 +127,32 @@ export default defineNuxtConfig({
 
     piniaPluginPersistedstate: {
         storage: 'localStorage',
+    },
+
+    pwa: {
+        manifest: {
+            name: 'Resume Builder',
+            short_name: 'Resume Builder',
+            description: 'Build professional resumes for free',
+            theme_color: '#3b82f6',
+            background_color: '#ffffff',
+            display: 'standalone',
+            start_url: '/',
+            icons: [
+                {
+                    src: '/icon.svg',
+                    sizes: 'any',
+                    type: 'image/svg+xml',
+                    purpose: 'any maskable',
+                },
+            ],
+        },
+        workbox: {
+            navigateFallback: '/',
+        },
+        devOptions: {
+            enabled: false,
+        },
     },
 
     seo: {

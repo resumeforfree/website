@@ -23,8 +23,9 @@ interface ResumeStoreState {
     nextId: number;
     isLoading: boolean;
     error: string | null;
+    isSyncing: boolean;
+    userId: string | null;
 }
-
 export const useResumeStore = defineStore('resume', {
     state: (): ResumeStoreState => ({
         resumes: {},
@@ -32,39 +33,44 @@ export const useResumeStore = defineStore('resume', {
         nextId: 1,
         isLoading: false,
         error: null,
+        isSyncing: false,
+        userId: null,
     }),
-
     persist: true,
-
     getters: {
         activeResume: (state): Resume | null => {
             if (!state.activeResumeId) return null;
             return state.resumes[state.activeResumeId] || null;
         },
-
         activeResumeData: (state): ResumeData | null => {
             if (!state.activeResumeId) return null;
             const resume = state.resumes[state.activeResumeId];
             return resume ? resume.data : null;
         },
-
         resumesList: (state): Resume[] => {
             return Object.values(state.resumes).sort((a, b) =>
                 new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
             );
         },
-
         resumeCount: (state): number => {
             return Object.keys(state.resumes).length;
         },
-
+        cloudInfo: (state) => {
+            const syncedCount = Object.values(state.resumes).filter(resume => resume.serverId).length;
+            return {
+                count: syncedCount,
+                limit: 3,
+                remaining: Math.max(0, 3 - syncedCount),
+            };
+        },
+        canSaveToCloud(): boolean {
+            return this.cloudInfo.remaining > 0;
+        },
         resumeData: (state): ResumeData => {
             const activeData = state.activeResumeId ? state.resumes[state.activeResumeId]?.data : null;
             if (!activeData) return { ...defaultResumeData };
-
             return activeData;
         },
-
         fullName: (state): string => {
             const resumeData = state.activeResumeId ? state.resumes[state.activeResumeId]?.data : null;
             if (!resumeData) return '';
@@ -72,14 +78,12 @@ export const useResumeStore = defineStore('resume', {
             const lastName = resumeData.lastName?.trim() || '';
             return [firstName, lastName].filter(Boolean).join(' ');
         },
-
         hasPersonalInfo: (state): boolean => {
             const resumeData = state.activeResumeId ? state.resumes[state.activeResumeId]?.data : null;
             if (!resumeData) return false;
             return Boolean(resumeData.firstName || resumeData.lastName
                 || resumeData.email || resumeData.phone);
         },
-
         sectionsWithData: (state): string[] => {
             const resumeData = state.activeResumeId ? state.resumes[state.activeResumeId]?.data : null;
             if (!resumeData) return [];
@@ -94,7 +98,6 @@ export const useResumeStore = defineStore('resume', {
             if (resumeData.languages.length) sections.push('languages');
             return sections;
         },
-
         orderedSections: (state): Array<{ key: string; order: number }> => {
             const resumeData = state.activeResumeId ? state.resumes[state.activeResumeId]?.data : null;
             if (!resumeData) return [];
@@ -111,7 +114,6 @@ export const useResumeStore = defineStore('resume', {
             return sections.sort((a, b) => a.order - b.order);
         },
     },
-
     actions: {
         initialize() {
             Object.keys(this.resumes).forEach((resumeId) => {
@@ -119,12 +121,9 @@ export const useResumeStore = defineStore('resume', {
                 if (resume === undefined) {
                     return;
                 }
-
-                // Initialize section order for backward compatibility
                 if (resume.data.sectionOrder) {
                     if (resume.data.sectionOrder.internships === undefined) {
                         resume.data.sectionOrder.internships = 3;
-                        // Shift other sections down
                         if (resume.data.sectionOrder.skills === 3) resume.data.sectionOrder.skills = 4;
                         if (resume.data.sectionOrder.volunteering === 4) resume.data.sectionOrder.volunteering = 5;
                         if (resume.data.sectionOrder.socialLinks === 5) resume.data.sectionOrder.socialLinks = 6;
@@ -142,13 +141,10 @@ export const useResumeStore = defineStore('resume', {
                         resume.data.sectionOrder.certificates = 9;
                     }
                 }
-
-                // Initialize section headers for backward compatibility
                 if (!resume.data.sectionHeaders) {
                     resume.data.sectionHeaders = { ...defaultResumeData.sectionHeaders };
                 }
                 else {
-                    // Ensure all section headers exist
                     if (resume.data.sectionHeaders.internships === undefined) {
                         resume.data.sectionHeaders.internships = 'Internships';
                     }
@@ -162,8 +158,6 @@ export const useResumeStore = defineStore('resume', {
                         resume.data.sectionHeaders.certificates = 'Certificates';
                     }
                 }
-
-                // Initialize section placement for backward compatibility
                 if (!resume.data.sectionPlacement) {
                     resume.data.sectionPlacement = { ...defaultResumeData.sectionPlacement };
                 }
@@ -178,94 +172,79 @@ export const useResumeStore = defineStore('resume', {
                         resume.data.sectionPlacement.certificates = 'right';
                     }
                 }
-
-                // Initialize internships array for backward compatibility
                 if (!resume.data.internships) {
                     resume.data.internships = [];
                 }
-
-                // Initialize certificates array for backward compatibility
                 if (!resume.data.certificates) {
                     resume.data.certificates = [];
                 }
+                if (resume.serverId === undefined) {
+                    resume.serverId = undefined;
+                }
             });
-
-            if (Object.keys(this.resumes).length === 0) {
-                this.createResume('My Resume');
-            }
-
             if (!this.activeResumeId && Object.keys(this.resumes).length > 0) {
                 this.activeResumeId = Object.keys(this.resumes)[0];
             }
         },
-
         createResume(name?: string): string {
             const id = `resume-${this.nextId}`;
             const timestamp = new Date().toISOString();
-
-            const newResume: Resume = {
+            this.resumes[id] = {
                 id,
                 name: name || `Resume ${this.nextId}`,
                 data: { ...defaultResumeData },
                 createdAt: timestamp,
                 updatedAt: timestamp,
             };
-
-            this.resumes[id] = newResume;
             this.nextId++;
-
             if (this.resumeCount === 1) {
                 this.activeResumeId = id;
             }
-
             return id;
         },
-
         setActiveResume(id: string): void {
             if (this.resumes[id]) {
                 this.activeResumeId = id;
             }
         },
-
         updateResumeData(id: string, data: Partial<ResumeData>): void {
             if (this.resumes[id]) {
                 this.resumes[id].data = { ...this.resumes[id].data, ...data };
                 this.resumes[id].updatedAt = new Date().toISOString();
             }
         },
-
         updateActiveResumeData(data: Partial<ResumeData>): void {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, data);
             }
         },
-
         renameResume(id: string, name: string): void {
             if (this.resumes[id]) {
                 this.resumes[id].name = name;
                 this.resumes[id].updatedAt = new Date().toISOString();
             }
         },
-
+        updateServerId(id: string, serverId: string): void {
+            if (this.resumes[id]) {
+                this.resumes[id].serverId = serverId;
+                this.resumes[id].updatedAt = new Date().toISOString();
+            }
+        },
         deleteResume(id: string): void {
             if (this.resumes[id]) {
-                // Create a new object without the deleted resume
                 const { [id]: deletedResume, ...remainingResumes } = this.resumes;
                 this.resumes = remainingResumes;
-
                 if (this.activeResumeId === id) {
                     const remainingIds = Object.keys(this.resumes);
                     this.activeResumeId = remainingIds.length > 0 ? remainingIds[0] : null;
                 }
             }
         },
-
         duplicateResume(id: string, customName?: string): string {
             if (this.resumes[id]) {
                 const originalResume = this.resumes[id];
                 const newId = `resume-${this.nextId}`;
                 const timestamp = new Date().toISOString();
-
                 this.resumes[newId] = {
                     id: newId,
                     name: customName || `${originalResume.name} (Copy)`,
@@ -274,12 +253,10 @@ export const useResumeStore = defineStore('resume', {
                     updatedAt: timestamp,
                 };
                 this.nextId++;
-
                 return newId;
             }
             return '';
         },
-
         updateField(field: keyof ResumeData, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -287,7 +264,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, updateData);
             }
         },
-
         addExperience() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -304,7 +280,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
             }
         },
-
         updateExperience(index: number, field: keyof Experience, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -315,7 +290,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeExperience(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -324,7 +298,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
             }
         },
-
         moveExperience(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -334,7 +307,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
             }
         },
-
         addExperienceAchievement(experienceIndex: number, achievement = '') {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -348,7 +320,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         updateExperienceAchievement(experienceIndex: number, achievementIndex: number, achievement: string) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -364,7 +335,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeExperienceAchievement(experienceIndex: number, achievementIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -380,7 +350,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         moveExperienceAchievement(experienceIndex: number, fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -397,8 +366,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
-        // Internship methods
         addInternship() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -415,7 +382,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { internships: newInternships });
             }
         },
-
         updateInternship(index: number, field: keyof Internship, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -426,7 +392,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeInternship(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -435,7 +400,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { internships: newInternships });
             }
         },
-
         moveInternship(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -445,7 +409,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { internships: newInternships });
             }
         },
-
         addInternshipAchievement(internshipIndex: number, achievement = '') {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -459,7 +422,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         updateInternshipAchievement(internshipIndex: number, achievementIndex: number, achievement: string) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -475,7 +437,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeInternshipAchievement(internshipIndex: number, achievementIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -491,7 +452,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         moveInternshipAchievement(internshipIndex: number, fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -508,7 +468,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         addEducation() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -526,7 +485,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { education: newEducation });
             }
         },
-
         updateEducation(index: number, field: keyof Education, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -537,7 +495,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeEducation(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -546,7 +503,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { education: newEducation });
             }
         },
-
         moveEducation(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -556,7 +512,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { education: newEducation });
             }
         },
-
         addVolunteering() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -572,7 +527,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
             }
         },
-
         updateVolunteering(index: number, field: keyof Volunteering, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -583,7 +537,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeVolunteering(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -592,7 +545,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
             }
         },
-
         moveVolunteering(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -602,7 +554,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
             }
         },
-
         addVolunteeringAchievement(volunteeringIndex: number, achievement = '') {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -616,7 +567,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         updateVolunteeringAchievement(volunteeringIndex: number, achievementIndex: number, achievement: string) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -632,7 +582,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeVolunteeringAchievement(volunteeringIndex: number, achievementIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -648,7 +597,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         moveVolunteeringAchievement(volunteeringIndex: number, fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -665,7 +613,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         addSkill() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -676,7 +623,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { skills: newSkills });
             }
         },
-
         updateSkill(index: number, field: keyof SkillItem, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -687,7 +633,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeSkill(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -696,7 +641,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { skills: newSkills });
             }
         },
-
         moveSkill(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -706,7 +650,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { skills: newSkills });
             }
         },
-
         addSocialLink() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -718,7 +661,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
             }
         },
-
         updateSocialLink(index: number, field: keyof SocialLink, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -729,7 +671,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeSocialLink(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -738,7 +679,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
             }
         },
-
         moveSocialLink(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -748,7 +688,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
             }
         },
-
         addProject() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -760,7 +699,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { projects: newProjects });
             }
         },
-
         updateProject(index: number, field: keyof Project, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -771,7 +709,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeProject(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -780,7 +717,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { projects: newProjects });
             }
         },
-
         moveProject(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -790,7 +726,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { projects: newProjects });
             }
         },
-
         addLanguage() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -801,7 +736,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { languages: newLanguages });
             }
         },
-
         updateLanguage(index: number, field: keyof Language, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -812,7 +746,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeLanguage(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -821,7 +754,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { languages: newLanguages });
             }
         },
-
         moveLanguage(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -831,7 +763,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { languages: newLanguages });
             }
         },
-
         addCertificate() {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -844,7 +775,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
             }
         },
-
         updateCertificate(index: number, field: keyof Certificate, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -855,7 +785,6 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         removeCertificate(index: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -864,7 +793,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
             }
         },
-
         moveCertificate(fromIndex: number, toIndex: number) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -874,13 +802,11 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
             }
         },
-
         updateSectionOrder(newOrder: SectionOrder) {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, { sectionOrder: { ...newOrder } });
             }
         },
-
         updateSectionHeader(section: keyof SectionHeaders, headerText: string) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -888,7 +814,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { sectionHeaders: newHeaders });
             }
         },
-
         updateSectionPlacement(section: keyof SectionPlacement, placement: 'left' | 'right') {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -896,7 +821,6 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { sectionPlacement: newPlacement });
             }
         },
-
         moveSectionUp(sectionKey: keyof SectionOrder) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -905,7 +829,6 @@ export const useResumeStore = defineStore('resume', {
                     const targetSection = Object.keys(currentData.sectionOrder).find(key =>
                         currentData.sectionOrder[key as keyof SectionOrder] === currentOrder - 1,
                     ) as keyof SectionOrder;
-
                     if (targetSection) {
                         const newSectionOrder = { ...currentData.sectionOrder };
                         newSectionOrder[sectionKey] = currentOrder - 1;
@@ -915,18 +838,15 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         moveSectionDown(sectionKey: keyof SectionOrder) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
                 const currentOrder = currentData.sectionOrder[sectionKey];
                 const maxOrder = Math.max(...Object.values(currentData.sectionOrder));
-
                 if (currentOrder < maxOrder) {
                     const targetSection = Object.keys(currentData.sectionOrder).find(key =>
                         currentData.sectionOrder[key as keyof SectionOrder] === currentOrder + 1,
                     ) as keyof SectionOrder;
-
                     if (targetSection) {
                         const newSectionOrder = { ...currentData.sectionOrder };
                         newSectionOrder[sectionKey] = currentOrder + 1;
@@ -936,24 +856,20 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
-
         setResumeData(data: ResumeData) {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, data);
             }
         },
-
         resetResumeData() {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, { ...defaultResumeData });
             }
         },
-
         exportData(): string {
             const currentData = this.activeResumeId ? this.resumes[this.activeResumeId]?.data : null;
             return JSON.stringify(currentData || { ...defaultResumeData }, null, 2);
         },
-
         importData(jsonString: string): boolean {
             try {
                 const data = JSON.parse(jsonString);
@@ -964,6 +880,89 @@ export const useResumeStore = defineStore('resume', {
                 console.error('Failed to import data:', error);
                 this.error = 'Failed to import data. Please check the file format.';
                 return false;
+            }
+        },
+        async fetchServerResumes() {
+            this.isLoading = true;
+            this.error = null;
+            try {
+                const api = useApi();
+                const serverResumes = await api.resumes.list();
+                await this.reconcileServerResumes(serverResumes);
+            }
+            catch (error: unknown) {
+                console.error('Failed to fetch server resumes:', error);
+                this.error = (error as Error).message || 'Failed to fetch resumes from server';
+            }
+            finally {
+                this.isLoading = false;
+            }
+        },
+        async reconcileServerResumes(serverResumes: Array<{ id: string; name: string; data: ResumeData; createdAt: string; updatedAt: string }>) {
+            for (const serverResume of serverResumes) {
+                const localResumeId = this.findLocalResumeByServerId(serverResume.id);
+                if (localResumeId) {
+                    const localResume = this.resumes[localResumeId];
+                    const serverUpdatedAt = new Date(serverResume.updatedAt);
+                    const localUpdatedAt = new Date(localResume.updatedAt);
+                    if (serverUpdatedAt > localUpdatedAt) {
+                        this.resumes[localResumeId] = {
+                            ...localResume,
+                            name: serverResume.name,
+                            data: serverResume.data,
+                            updatedAt: serverResume.updatedAt,
+                            serverId: serverResume.id,
+                        };
+                    }
+                    else {
+                        this.resumes[localResumeId].serverId = serverResume.id;
+                    }
+                }
+                else {
+                    const newLocalId = `resume-${this.nextId}`;
+                    this.nextId += 1;
+                    this.resumes[newLocalId] = {
+                        id: newLocalId,
+                        serverId: serverResume.id,
+                        name: serverResume.name,
+                        data: serverResume.data || { ...defaultResumeData },
+                        createdAt: serverResume.createdAt,
+                        updatedAt: serverResume.updatedAt,
+                    };
+                }
+            }
+        },
+        findLocalResumeByServerId(serverId: string): string | null {
+            for (const [localId, resume] of Object.entries(this.resumes)) {
+                if (resume.serverId === serverId) {
+                    return localId;
+                }
+            }
+            return null;
+        },
+        async syncResumeToServer(resumeId: string) {
+            const resume = this.resumes[resumeId];
+            if (!resume) return;
+
+            try {
+                const api = useApi();
+
+                if (resume.serverId) {
+                    await api.resumes.update(resume.serverId, {
+                        name: resume.name,
+                        data: resume.data,
+                    });
+                }
+
+                else {
+                    const serverResume = await api.resumes.create(resume.name, resume.data);
+                    this.resumes[resumeId].serverId = serverResume.id;
+                }
+                this.resumes[resumeId].updatedAt = new Date().toISOString();
+            }
+            catch (error: unknown) {
+                console.error('Failed to sync resume to server:', error);
+                throw error;
             }
         },
     },
