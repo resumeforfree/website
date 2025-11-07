@@ -30,7 +30,11 @@
         "help": "Help",
         "resumes": "Your Resumes",
         "contact": "Contact",
-        "github": "GitHub"
+        "github": "GitHub",
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "signOut": "Sign Out",
+        "profile": "Profile"
     },
     "homepage": {
         "title": "Build Your Resume",

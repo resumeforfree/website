@@ -69,14 +69,14 @@ onMounted(async () => {
                                     class="text-gray-600 hover:text-gray-900"
                                 >
                                     <User class="w-4 h-4 mr-1" />
-                                    <span class="hidden sm:inline">Sign In</span>
+                                    <span class="hidden sm:inline">{{ t('navigation.signIn') }}</span>
                                 </Button>
                             </NuxtLink>
                             <NuxtLink to="/auth/register">
                                 <Button
                                     size="sm"
                                 >
-                                    <span class="text-sm">Sign Up</span>
+                                    <span class="text-sm">{{ t('navigation.signUp') }}</span>
                                 </Button>
                             </NuxtLink>
                         </template>
@@ -95,7 +95,7 @@ onMounted(async () => {
                                 @click="handleLogout"
                             >
                                 <LogOut class="w-4 h-4 mr-1" />
-                                <span class="hidden sm:inline">Sign Out</span>
+                                <span class="hidden sm:inline">{{ t('navigation.signOut') }}</span>
                             </Button>
                         </template>
                         <div class="h-4 w-px bg-gray-300 hidden md:block" />

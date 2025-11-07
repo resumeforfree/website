@@ -8,7 +8,7 @@
     "deploy:staging": "nuxt build && wrangler deploy --env staging",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "dev": "nuxt dev --host",
+    "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -18,7 +18,7 @@
     "@myriaddreamin/typst-ts-renderer": "^0.6.0",
     "@myriaddreamin/typst-ts-web-compiler": "^0.6.0",
     "@myriaddreamin/typst.ts": "^0.6.0",
-    "@nuxtjs/i18n": "^10.0.4",
+    "@nuxtjs/i18n": "^10.2.0",
     "@nuxtjs/turnstile": "^1.0.0",
     "@pinia/nuxt": "^0.11.1",
     "@tailwindcss/postcss": "^4.1.11",
