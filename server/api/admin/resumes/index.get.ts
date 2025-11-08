@@ -14,7 +14,17 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Fetch all resumes with user email
+        // Get pagination params
+        const query = getQuery(event);
+        const page = Math.max(1, parseInt(query.page as string) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 50));
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const countResult = await db.prepare('SELECT COUNT(*) as total FROM resumes').first<{ total: number }>();
+        const total = countResult?.total || 0;
+
+        // Fetch paginated resumes with user email
         const result = await db.prepare(`
             SELECT
                 r.id,
@@ -28,10 +38,17 @@ export default defineEventHandler(async (event) => {
             FROM resumes r
             LEFT JOIN users u ON r.user_id = u.id
             ORDER BY r.created_at DESC
-        `).all();
+            LIMIT ? OFFSET ?
+        `).bind(limit, offset).all();
 
         return {
             resumes: result.results || [],
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
         };
     }
     catch (error) {

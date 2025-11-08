@@ -69,22 +69,36 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                         {{ formatDate(resume.updated_at) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            @click="openPreview(resume)"
-                                        >
-                                            <Eye class="w-4 h-4 mr-1" />
-                                            {{ $t('admin.resumes.actions.view') }}
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            @click="confirmDelete(resume.id)"
-                                        >
-                                            {{ $t('common.delete') }}
-                                        </Button>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                @click="openPreview(resume)"
+                                            >
+                                                <Eye class="w-4 h-4 mr-1" />
+                                                {{ $t('admin.resumes.actions.view') }}
+                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger as-child>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                    >
+                                                        <MoreVertical class="w-4 h-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem
+                                                        class="text-red-600 focus:text-red-600"
+                                                        @click="confirmDelete(resume.id)"
+                                                    >
+                                                        <Trash2 class="w-4 h-4 mr-2" />
+                                                        {{ $t('common.delete') }}
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -92,6 +106,46 @@
                     </div>
                 </CardContent>
             </Card>
+
+            <!-- Pagination -->
+            <div
+                v-if="pagination.totalPages > 1"
+                class="flex items-center justify-between"
+            >
+                <div class="text-sm text-gray-700">
+                    {{ $t('admin.pagination.showing', { from: (pagination.page - 1) * pagination.limit + 1, to: Math.min(pagination.page * pagination.limit, pagination.total), total: pagination.total }) }}
+                </div>
+                <div class="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="currentPage === 1"
+                        @click="goToPage(currentPage - 1)"
+                    >
+                        {{ $t('admin.pagination.previous') }}
+                    </Button>
+                    <div class="flex items-center gap-1">
+                        <Button
+                            v-for="page in pagination.totalPages"
+                            :key="page"
+                            variant="outline"
+                            size="sm"
+                            :class="{ 'bg-blue-50 border-blue-500 text-blue-600': page === currentPage }"
+                            @click="goToPage(page)"
+                        >
+                            {{ page }}
+                        </Button>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="currentPage === pagination.totalPages"
+                        @click="goToPage(currentPage + 1)"
+                    >
+                        {{ $t('admin.pagination.next') }}
+                    </Button>
+                </div>
+            </div>
 
             <!-- Preview Dialog -->
             <ResumePreviewDialog
@@ -104,10 +158,16 @@
 </template>
 
 <script lang="ts" setup>
-import { FileText, Eye } from 'lucide-vue-next';
+import { FileText, Eye, MoreVertical, Trash2 } from 'lucide-vue-next';
 import ResumePreviewDialog from '~/components/admin/ResumePreviewDialog.vue';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 import { toast } from 'vue-sonner';
 
 definePageMeta({
@@ -132,12 +192,25 @@ const resumes = ref<Resume[]>([]);
 const loading = ref(true);
 const showPreview = ref(false);
 const previewResume = ref<Resume | null>(null);
+const currentPage = ref(1);
+const pagination = ref({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+});
 
 const fetchResumes = async () => {
     loading.value = true;
     try {
-        const data = await $fetch('/api/admin/resumes');
+        const data = await $fetch('/api/admin/resumes', {
+            query: {
+                page: currentPage.value,
+                limit: 50,
+            },
+        });
         resumes.value = data.resumes || [];
+        pagination.value = data.pagination;
     }
     catch (error) {
         console.error('Error fetching resumes:', error);
@@ -146,6 +219,11 @@ const fetchResumes = async () => {
     finally {
         loading.value = false;
     }
+};
+
+const goToPage = (page: number) => {
+    currentPage.value = page;
+    fetchResumes();
 };
 
 const openPreview = (resume: Resume) => {

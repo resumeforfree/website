@@ -146,6 +146,46 @@
                     </div>
                 </Card>
             </div>
+
+            <!-- Pagination -->
+            <div
+                v-if="pagination.totalPages > 1"
+                class="flex items-center justify-between"
+            >
+                <div class="text-sm text-gray-700">
+                    {{ $t('admin.pagination.showing', { from: (pagination.page - 1) * pagination.limit + 1, to: Math.min(pagination.page * pagination.limit, pagination.total), total: pagination.total }) }}
+                </div>
+                <div class="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="currentPage === 1"
+                        @click="goToPage(currentPage - 1)"
+                    >
+                        {{ $t('admin.pagination.previous') }}
+                    </Button>
+                    <div class="flex items-center gap-1">
+                        <Button
+                            v-for="page in pagination.totalPages"
+                            :key="page"
+                            variant="outline"
+                            size="sm"
+                            :class="{ 'bg-blue-50 border-blue-500 text-blue-600': page === currentPage }"
+                            @click="goToPage(page)"
+                        >
+                            {{ page }}
+                        </Button>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="currentPage === pagination.totalPages"
+                        @click="goToPage(currentPage + 1)"
+                    >
+                        {{ $t('admin.pagination.next') }}
+                    </Button>
+                </div>
+            </div>
     </div>
 </template>
 
@@ -177,6 +217,13 @@ interface ContactMessage {
 const messages = ref<ContactMessage[]>([]);
 const loading = ref(true);
 const currentFilter = ref<string>('all');
+const currentPage = ref(1);
+const pagination = ref({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+});
 
 const filters = computed(() => [
     {
@@ -211,8 +258,14 @@ const filteredMessages = computed(() => {
 const fetchMessages = async () => {
     loading.value = true;
     try {
-        const data = await $fetch('/api/admin/contact-messages');
+        const data = await $fetch('/api/admin/contact-messages', {
+            query: {
+                page: currentPage.value,
+                limit: 50,
+            },
+        });
         messages.value = data.messages || [];
+        pagination.value = data.pagination;
     }
     catch (error) {
         console.error('Error fetching contact messages:', error);
@@ -221,6 +274,11 @@ const fetchMessages = async () => {
     finally {
         loading.value = false;
     }
+};
+
+const goToPage = (page: number) => {
+    currentPage.value = page;
+    fetchMessages();
 };
 
 const updateStatus = async (messageId: string, status: string) => {

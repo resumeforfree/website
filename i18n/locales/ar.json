@@ -704,6 +704,11 @@
                 "updateFailed": "فشل تحديث حالة الرسالة",
                 "deleteFailed": "فشل حذف الرسالة"
             }
+        },
+        "pagination": {
+            "showing": "عرض {from} إلى {to} من {total} نتيجة",
+            "previous": "السابق",
+            "next": "التالي"
         }
     }
 }

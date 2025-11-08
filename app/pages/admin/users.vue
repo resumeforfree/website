@@ -116,6 +116,46 @@
                     </div>
                 </CardContent>
             </Card>
+
+            <!-- Pagination -->
+            <div
+                v-if="pagination.totalPages > 1"
+                class="flex items-center justify-between"
+            >
+                <div class="text-sm text-gray-700">
+                    {{ $t('admin.pagination.showing', { from: (pagination.page - 1) * pagination.limit + 1, to: Math.min(pagination.page * pagination.limit, pagination.total), total: pagination.total }) }}
+                </div>
+                <div class="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="currentPage === 1"
+                        @click="goToPage(currentPage - 1)"
+                    >
+                        {{ $t('admin.pagination.previous') }}
+                    </Button>
+                    <div class="flex items-center gap-1">
+                        <Button
+                            v-for="page in pagination.totalPages"
+                            :key="page"
+                            variant="outline"
+                            size="sm"
+                            :class="{ 'bg-blue-50 border-blue-500 text-blue-600': page === currentPage }"
+                            @click="goToPage(page)"
+                        >
+                            {{ page }}
+                        </Button>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="currentPage === pagination.totalPages"
+                        @click="goToPage(currentPage + 1)"
+                    >
+                        {{ $t('admin.pagination.next') }}
+                    </Button>
+                </div>
+            </div>
     </div>
 </template>
 
@@ -143,12 +183,25 @@ interface User {
 
 const users = ref<User[]>([]);
 const loading = ref(true);
+const currentPage = ref(1);
+const pagination = ref({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+});
 
 const fetchUsers = async () => {
     loading.value = true;
     try {
-        const data = await $fetch('/api/admin/users');
+        const data = await $fetch('/api/admin/users', {
+            query: {
+                page: currentPage.value,
+                limit: 50,
+            },
+        });
         users.value = data.users || [];
+        pagination.value = data.pagination;
     }
     catch (error) {
         console.error('Error fetching users:', error);
@@ -157,6 +210,11 @@ const fetchUsers = async () => {
     finally {
         loading.value = false;
     }
+};
+
+const goToPage = (page: number) => {
+    currentPage.value = page;
+    fetchUsers();
 };
 
 const updateRole = async (userId: string, newRole: 'user' | 'admin') => {

@@ -14,7 +14,17 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Fetch all users
+        // Get pagination params
+        const query = getQuery(event);
+        const page = Math.max(1, parseInt(query.page as string) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 50));
+        const offset = (page - 1) * limit;
+
+        // Get total count
+        const countResult = await db.prepare('SELECT COUNT(*) as total FROM users').first<{ total: number }>();
+        const total = countResult?.total || 0;
+
+        // Fetch paginated users
         const result = await db.prepare(`
             SELECT
                 id,
@@ -26,10 +36,17 @@ export default defineEventHandler(async (event) => {
                 updated_at
             FROM users
             ORDER BY created_at DESC
-        `).all();
+            LIMIT ? OFFSET ?
+        `).bind(limit, offset).all();
 
         return {
             users: result.results || [],
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
         };
     }
     catch (error) {

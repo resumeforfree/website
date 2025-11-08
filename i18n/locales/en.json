@@ -704,6 +704,11 @@
                 "updateFailed": "Failed to update message status",
                 "deleteFailed": "Failed to delete message"
             }
+        },
+        "pagination": {
+            "showing": "Showing {from} to {to} of {total} results",
+            "previous": "Previous",
+            "next": "Next"
         }
     }
 }
