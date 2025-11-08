@@ -81,6 +81,28 @@
                         Adjust the base font size for your resume (default: 14pt)
                     </p>
                 </div>
+                <div class="space-y-2">
+                    <Label for="language">Language</Label>
+                    <Select
+                        v-model="selectedLanguage"
+                        @update:model-value="updateLanguage"
+                    >
+                        <SelectTrigger id="language">
+                            <SelectValue placeholder="Select a language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="en">
+                                English
+                            </SelectItem>
+                            <SelectItem value="fr">
+                                French
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <p class="text-sm text-muted-foreground">
+                        Choose the language for your resume
+                    </p>
+                </div>
             </div>
             <DialogFooter>
                 <Button
@@ -124,6 +146,8 @@ const settingsStore = useSettingsStore();
 const fontSize = ref([settingsStore.fontSize]);
 const selectedFont = ref(settingsStore.selectedFont);
 const selectedTemplate = ref(settingsStore.selectedTemplate);
+const selectedLanguage = ref(settingsStore.language);
+
 const isOpen = computed({
     get: () => props.modelValue,
     set: value => emit('update:modelValue', value),
@@ -141,22 +165,35 @@ watch(() => settingsStore.selectedFont, (newFont) => {
 watch(() => settingsStore.selectedTemplate, (newTemplate) => {
     selectedTemplate.value = newTemplate;
 });
+watch(() => settingsStore.language, (newLanguage) => {
+    selectedLanguage.value = newLanguage;
+});
+
 const updateFontSize = (value: number[]) => {
     settingsStore.setFontSize(value[0]);
 };
+
 const updateFont = (value: string) => {
     settingsStore.setSelectedFont(value);
 };
+
 const updateTemplate = (value: string) => {
     settingsStore.setSelectedTemplate(value);
 };
+
+const updateLanguage = (value: string) => {
+    settingsStore.setLanguage(value);
+};
+
 const resetToDefaults = () => {
     fontSize.value = [14];
     selectedFont.value = 'Calibri';
     selectedTemplate.value = 'default';
+    selectedLanguage.value = 'en';
     settingsStore.setFontSize(14);
     settingsStore.setSelectedFont('Calibri');
     settingsStore.setSelectedTemplate('default');
+    settingsStore.setLanguage('en');
 };
 const close = () => {
     isOpen.value = false;

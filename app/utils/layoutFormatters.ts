@@ -64,12 +64,13 @@ export const formatEducationItems = (
     sectionContent: SectionContent[],
     config: TemplateLayoutConfig,
     fontSize: number,
+    language: string,
 ): string => {
     const formattedItems = sectionContent.map((item) => {
         let content = renderTemplateSubHeader(item.title, fontSize);
         if (item.date) {
             content += '\n\n';
-            content += renderTemplateDate(item.date, fontSize);
+            content += renderTemplateDate(item.date, fontSize, language);
         }
         if (item.additionalInfo) {
             content += '\n\n';
@@ -109,6 +110,7 @@ export const formatCertificatesItems = (
     sectionContent: SectionContent[],
     config: TemplateLayoutConfig,
     fontSize: number,
+    language: string,
 ): string => {
     const formattedItems = sectionContent.map((item) => {
         let content = renderTemplateSubHeader(item.title, fontSize);
@@ -118,6 +120,7 @@ export const formatCertificatesItems = (
                 item.date || '',
                 item.content || null,
                 fontSize,
+                language,
             );
             content += dateAndLinkSection;
         }

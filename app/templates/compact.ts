@@ -100,17 +100,18 @@ const parse = (data: ResumeData, font: string): string => {
     const settings: TemplateSettings = { font };
     const settingsStore = useSettingsStore();
     const fontSize = settingsStore.fontSize;
+    const language = settingsStore.language;
     const sharedRenderers = getSharedSectionRenderers();
     const config = COMPACT_LAYOUT_CONFIG;
     const sectionRenderers: Record<string, () => string> = {
-        education: () => sharedRenderers.education(data, fontSize, config),
-        experience: () => sharedRenderers.experience(data, fontSize, config),
-        internships: () => sharedRenderers.internships(data, fontSize, config),
-        skills: () => sharedRenderers.skills(data, fontSize, config),
-        projects: () => sharedRenderers.projects(data, fontSize, config),
-        volunteering: () => sharedRenderers.volunteering(data, fontSize, config),
-        languages: () => sharedRenderers.languages(data, fontSize, config),
-        certificates: () => sharedRenderers.certificates(data, fontSize, config),
+        education: () => sharedRenderers.education(data, fontSize, config, language),
+        experience: () => sharedRenderers.experience(data, fontSize, config, language),
+        internships: () => sharedRenderers.internships(data, fontSize, config, language),
+        skills: () => sharedRenderers.skills(data, fontSize, config, language),
+        projects: () => sharedRenderers.projects(data, fontSize, config, language),
+        volunteering: () => sharedRenderers.volunteering(data, fontSize, config, language),
+        languages: () => sharedRenderers.languages(data, fontSize, config, language),
+        certificates: () => sharedRenderers.certificates(data, fontSize, config, language),
     };
     const sectionsToRender = Object.keys(sectionRenderers);
     const sortedSections = sectionsToRender.sort((a, b) => {

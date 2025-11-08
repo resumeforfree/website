@@ -27,31 +27,33 @@ export const convertSubHeader = (title: string, size = '14pt'): string => {
     if (!title) return '';
     return `#block(below: 1em)[#text("${escapeTypstText(title)}", size: ${size}, weight: "bold")]`;
 };
-export const formatDateToMonthYear = (date: string): string => {
+export const formatDateToMonthYear = (date: string, language: string): string => {
     if (!date) return '';
     const parts = date.split('-');
     if (parts.length === 2) {
         const year = parseInt(parts[0]);
         const month = parseInt(parts[1]) - 1;
         const dateObj = new Date(year, month);
-        return dateObj.toLocaleDateString('en-US', {
+        const locale = language === 'fr' ? 'fr-FR' : 'en-US';
+        return dateObj.toLocaleDateString(locale, {
             year: 'numeric',
             month: 'long',
         });
     }
     return date;
 };
-export const convertDateRange = (startDate: string, endDate?: string, isPresent?: boolean): string => {
+export const convertDateRange = (startDate: string, endDate?: string, isPresent?: boolean, language: string = 'en'): string => {
     if (!startDate && !endDate && !isPresent) return '';
     let dateText = '';
     if (startDate) {
-        dateText = formatDateToMonthYear(startDate);
+        dateText = formatDateToMonthYear(startDate, language);
     }
     if (endDate && !isPresent) {
-        dateText += dateText ? ` - ${formatDateToMonthYear(endDate)}` : formatDateToMonthYear(endDate);
+        dateText += dateText ? ` - ${formatDateToMonthYear(endDate, language)}` : formatDateToMonthYear(endDate, language);
     }
     if (isPresent) {
-        dateText += dateText ? ' - Present' : 'Present';
+        const presentText = language === 'fr' ? "Aujourd'hui" : 'Present';
+        dateText += dateText ? ` - ${presentText}` : presentText;
     }
     return `#text(fill: gray, "${escapeTypstText(dateText)}")`;
 };
@@ -86,12 +88,12 @@ export const renderTemplateHeader = (text: string, fontSize: number): string => 
 export const renderTemplateSubHeader = (text: string, fontSize: number): string => {
     return `#block(below: 0.6em)[#text("${escapeTypstText(text)}", size: ${fontSize}pt, weight: "bold")]`;
 };
-export const renderTemplateDate = (dateText: string, fontSize: number): string => {
+export const renderTemplateDate = (dateText: string, fontSize: number, language: string): string => {
     return `#block(above: 0em, below: 0.6em)[#text(size: ${fontSize - 2}pt)[${dateText}]]`;
 };
-export const renderTemplateDateWithLink = (dateRange: string, link: string | null, fontSize: number): string => {
+export const renderTemplateDateWithLink = (dateRange: string, link: string | null, fontSize: number, language: string): string => {
     if (link) {
         return `#block(above: 0em, below: 0.6em)[#text(size: ${fontSize - 2}pt)[${dateRange} • ${link}]]`;
     }
-    return renderTemplateDate(dateRange, fontSize);
+    return renderTemplateDate(dateRange, fontSize, language);
 };

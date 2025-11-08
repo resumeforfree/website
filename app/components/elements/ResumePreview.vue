@@ -282,7 +282,7 @@ const { isReady: typstReady } = useTypstLoader();
 const settingsStore = useSettingsStore();
 const resumeStore = useResumeStore();
 const { resumeData, activeResume } = storeToRefs(resumeStore);
-const { selectedFont, selectedTemplate, fontSize } = storeToRefs(settingsStore);
+const { selectedFont, selectedTemplate, fontSize, language } = storeToRefs(settingsStore);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const previewContent = ref<string>('');
@@ -401,7 +401,7 @@ const debouncedGeneratePreview = useDebounceFn(() => {
     generatePreviewInternal();
 }, 100);
 watch(
-    [resumeData, selectedTemplate, selectedFont, fontSize],
+    [resumeData, selectedTemplate, selectedFont, fontSize, language],
     () => {
         debouncedGeneratePreview();
     },

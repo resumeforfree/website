@@ -16,8 +16,12 @@ export const useSettingsStore = defineStore('settings', {
         showTemplateMenu: state => state.settings.showTemplateMenu,
         fontSize: state => state.settings.fontSize ?? 14,
         sectionCollapsed: state => state.settings.sectionCollapsed || {},
+        language: state => state.settings.language || 'en',
     },
     actions: {
+        setLanguage(language: string) {
+            this.settings.language = language;
+        },
         setSelectedFont(font: string) {
             this.settings.selectedFont = font;
         },

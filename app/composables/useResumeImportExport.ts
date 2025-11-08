@@ -1,4 +1,5 @@
 import type { ImportResumePreview } from '~/components/elements/ImportConfirmationModal.vue';
+import { useSettingsStore } from '~/stores/settings';
 
 export const useResumeImportExport = () => {
     const resumeStore = useResumeStore();
@@ -8,9 +9,11 @@ export const useResumeImportExport = () => {
             console.error('No resumes to export');
             return;
         }
+        const settingsStore = useSettingsStore();
+        const language = settingsStore.language;
         const exportData = resumes.map(resume => ({
             name: resume.name,
-            data: resume.data,
+            data: { ...resume.data, language },
             createdAt: resume.createdAt,
             updatedAt: resume.updatedAt,
         }));
@@ -90,11 +93,15 @@ export const useResumeImportExport = () => {
     };
     const importSelectedResumes = (previews: ImportResumePreview[], selectedIndexes: number[]) => {
         let importedCount = 0;
+        const settingsStore = useSettingsStore();
         selectedIndexes.forEach((index) => {
             const resumeData = previews[index];
             if (resumeData) {
                 const newResumeId = resumeStore.createResume(resumeData.name);
                 resumeStore.updateResumeData(newResumeId, resumeData.data);
+                if (resumeData.data.language) {
+                    settingsStore.setLanguage(resumeData.data.language);
+                }
                 importedCount++;
             }
         });

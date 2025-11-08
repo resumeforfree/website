@@ -125,6 +125,7 @@ export interface ResumeData {
     sectionOrder: SectionOrder;
     sectionHeaders: SectionHeaders;
     sectionPlacement: SectionPlacement;
+    language?: string;
 }
 export interface Resume {
     id: string;
@@ -148,6 +149,7 @@ export interface AppSettings {
     showTemplateMenu: boolean;
     fontSize: number;
     sectionCollapsed: Record<string, boolean>;
+    language: string;
 }
 export const defaultResumeData: ResumeData = {
     version: 'v1',
@@ -222,6 +224,7 @@ export const defaultAppSettings: AppSettings = {
         languages: true,
         certificates: true,
     },
+    language: 'en',
 };
 export const availableFonts = [
     { name: 'Calibri', family: 'Calibri' },

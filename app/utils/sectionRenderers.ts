@@ -37,43 +37,43 @@ const DEFAULT_SECTION_HEADERS = {
     socialLinks: 'Links',
     certificates: 'Certificates',
 } as const;
-export const renderSharedExperience: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedExperience: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     if (!data?.experiences || data.experiences.length === 0) {
         return '';
     }
-    const sectionContent = generateExperienceContent(data.experiences);
+    const sectionContent = generateExperienceContent(data.experiences, language);
     const formattedContent = formatExperienceItems(sectionContent, config, fontSize);
     const headerText = data?.sectionHeaders?.experience || DEFAULT_SECTION_HEADERS.experience;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedInternships: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedInternships: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     if (!data?.internships || data.internships.length === 0) {
         return '';
     }
-    const sectionContent = generateInternshipsContent(data.internships);
+    const sectionContent = generateInternshipsContent(data.internships, language);
     const formattedContent = formatExperienceItems(sectionContent, config, fontSize);
     const headerText = data?.sectionHeaders?.internships || DEFAULT_SECTION_HEADERS.internships;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedEducation: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedEducation: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     if (!data?.education || data.education.length === 0) {
         return '';
     }
-    const sectionContent = generateEducationContent(data.education);
-    const formattedContent = formatEducationItems(sectionContent, config, fontSize);
+    const sectionContent = generateEducationContent(data.education, language);
+    const formattedContent = formatEducationItems(sectionContent, config, fontSize, language);
     const headerText = data?.sectionHeaders?.education || DEFAULT_SECTION_HEADERS.education;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedVolunteering: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedVolunteering: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     if (!data?.volunteering || data.volunteering.length === 0) {
         return '';
     }
-    const sectionContent = generateVolunteeringContent(data.volunteering);
+    const sectionContent = generateVolunteeringContent(data.volunteering, language);
     const formattedContent = formatExperienceItems(sectionContent, config, fontSize);
     const headerText = data?.sectionHeaders?.volunteering || DEFAULT_SECTION_HEADERS.volunteering;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedProjects: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedProjects: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     if (!data?.projects || data.projects.length === 0) {
         return '';
     }
@@ -83,7 +83,7 @@ export const renderSharedProjects: SectionRenderer = (data: ResumeData, fontSize
     const headerText = data?.sectionHeaders?.projects || DEFAULT_SECTION_HEADERS.projects;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedSkills: SectionRenderer = (data: ResumeData, fontSize: number, _config: TemplateLayoutConfig): string => {
+export const renderSharedSkills: SectionRenderer = (data: ResumeData, fontSize: number, _config: TemplateLayoutConfig, language: string): string => {
     if (data?.skills && data.skills.length > 0) {
         const sectionContent = generateSkillsContent(data.skills);
         if (sectionContent.length === 0) return '';
@@ -101,11 +101,11 @@ export const renderSharedSkills: SectionRenderer = (data: ResumeData, fontSize: 
     const content = data.technicalSkills.trim();
     return wrapInSectionBlock('Technical Skills', content, fontSize, renderTemplateHeader);
 };
-export const renderSharedLanguages: SectionRenderer = (data: ResumeData, fontSize: number, _config: TemplateLayoutConfig): string => {
+export const renderSharedLanguages: SectionRenderer = (data: ResumeData, fontSize: number, _config: TemplateLayoutConfig, language: string): string => {
     if (!data?.languages || data.languages.length === 0) {
         return '';
     }
-    const sectionContent = generateLanguagesContent(data.languages);
+    const sectionContent = generateLanguagesContent(data.languages, language);
     if (sectionContent.length === 0) return '';
     const formattedContent = formatSectionItems(sectionContent.map(item => item.content || ''), {
         spacing: 'block',
@@ -115,14 +115,14 @@ export const renderSharedLanguages: SectionRenderer = (data: ResumeData, fontSiz
     const headerText = data?.sectionHeaders?.languages || DEFAULT_SECTION_HEADERS.languages;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedContactInfo: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedContactInfo: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     const sectionContent = generateContactContent(data);
     if (sectionContent.length === 0) return '';
     const formattedContent = formatSimpleItems(sectionContent, config);
     const headerText = data?.sectionHeaders?.info || DEFAULT_SECTION_HEADERS.info;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedSocialLinks: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedSocialLinks: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     const sectionContent = generateSocialLinksContent(data);
     if (sectionContent.length === 0) return '';
     const formattedContent = formatSocialLinks(sectionContent, config.socialLinks);
@@ -132,7 +132,7 @@ export const renderSharedSocialLinks: SectionRenderer = (data: ResumeData, fontS
     }
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
-export const renderSharedProfile: SectionRenderer = (data: ResumeData, fontSize: number, _config: TemplateLayoutConfig): string => {
+export const renderSharedProfile: SectionRenderer = (data: ResumeData, fontSize: number, _config: TemplateLayoutConfig, language: string): string => {
     if (!data?.summary || !data.summary.trim()) {
         return '';
     }
@@ -140,13 +140,13 @@ export const renderSharedProfile: SectionRenderer = (data: ResumeData, fontSize:
     const content = escapeTypstText(data.summary.trim());
     return wrapInSectionBlock(headerText, content, fontSize, renderTemplateHeader);
 };
-export const renderSharedCertificates: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig): string => {
+export const renderSharedCertificates: SectionRenderer = (data: ResumeData, fontSize: number, config: TemplateLayoutConfig, language: string): string => {
     if (!data?.certificates || data.certificates.length === 0) {
         return '';
     }
-    const sectionContent = generateCertificatesContent(data.certificates);
+    const sectionContent = generateCertificatesContent(data.certificates, language);
     if (sectionContent.length === 0) return '';
-    const formattedContent = formatCertificatesItems(sectionContent, config, fontSize);
+    const formattedContent = formatCertificatesItems(sectionContent, config, fontSize, language);
     const headerText = data?.sectionHeaders?.certificates || DEFAULT_SECTION_HEADERS.certificates;
     return wrapInSectionBlock(headerText, formattedContent, fontSize, renderTemplateHeader);
 };
