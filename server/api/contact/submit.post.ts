@@ -1,5 +1,4 @@
 import type { D1Database } from '@cloudflare/workers-types';
-import { verifyTurnstileToken } from '#turnstile/server';
 
 // Simple in-memory rate limiter (for production, consider Redis or D1-based storage)
 const rateLimitMap = new Map<string, number[]>();
