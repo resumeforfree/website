@@ -6,6 +6,7 @@ import { convertGrid, SECTION_SPACING } from '~/utils/typstUtils';
 import { useSettingsStore } from '~/stores/settings';
 import { getSharedSectionRenderers } from '~/utils/sectionRenderers';
 import { RendererContext } from '~/utils/rendererContext';
+import { isRtlLocale } from '~/utils/localeUtils';
 
 export interface Template {
     id: string;
@@ -27,7 +28,7 @@ const parse = (data: ResumeData, font: string, locale = 'en', t: (key: string) =
     const settings: TemplateSettings = { font };
     const settingsStore = useSettingsStore();
     const fontSize = settingsStore.fontSize;
-    const isArabic = locale === 'ar';
+    const isRtl = isRtlLocale(locale);
 
     const config = DEFAULT_LAYOUT_CONFIG;
     const context = new RendererContext(t, fontSize, config);
@@ -104,8 +105,8 @@ const parse = (data: ResumeData, font: string, locale = 'en', t: (key: string) =
 ${leftContent}`;
     const twoColumnLayout = convertGrid([headerAndLeftContent, rightContent], '(7fr, 3fr)');
 
-    // Configure font and text direction for Arabic support
-    const fontConfig = isArabic
+    // Configure font and text direction for RTL languages
+    const fontConfig = isRtl
         ? `#set text(font: ("${settings.font}", "Arial"), size: ${fontSize}pt, dir: rtl)`
         : `#set text(font: ("${settings.font}"), size: ${fontSize}pt)`;
 

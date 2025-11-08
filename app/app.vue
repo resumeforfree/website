@@ -8,7 +8,7 @@
 </template>
 
 <script lang="ts" setup>
-const { locale } = useI18n();
+const { locale, locales } = useI18n();
 const rootEl = ref<HTMLElement | null>(null);
 
 // Set initial direction after mount to avoid hydration mismatch
@@ -23,8 +23,9 @@ watch(locale, () => {
 
 function updateDirection() {
     if (import.meta.client) {
-        const isRtl = locale.value === 'ar';
-        const dir = isRtl ? 'rtl' : 'ltr';
+        const localeConfig = locales.value.find(l => l.code === locale.value);
+        const dir = localeConfig?.dir || 'ltr';
+        const isRtl = dir === 'rtl';
 
         // Update document element
         document.documentElement.dir = dir;

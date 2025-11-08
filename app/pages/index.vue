@@ -3,23 +3,9 @@ import { Button } from '~/components/ui/button';
 import { Check, Download, FileText, Shield, Users, Zap, Languages } from 'lucide-vue-next';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
 import { createSoftwareApplicationStructuredData, createWebsiteStructuredData } from '~/composables/useSEO';
-import { getDefaultFontForLanguage } from '~/types/resume';
 
-const { t, locale, setLocale, locales } = useI18n();
-
-const switchLanguage = (newLocale: string) => {
-    setLocale(newLocale);
-    // Update document direction immediately
-    if (import.meta.client) {
-        document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
-        document.documentElement.lang = newLocale;
-
-        // Update font to default for new language
-        const settingsStore = useSettingsStore();
-        const newDefaultFont = getDefaultFontForLanguage(newLocale);
-        settingsStore.setSelectedFont(newDefaultFont);
-    }
-};
+const { t, locale, locales } = useI18n();
+const { switchLanguage } = useLanguageSwitcher();
 
 useHead({
     title: t('homepage.heroTitle'),

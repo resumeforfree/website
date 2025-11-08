@@ -1,30 +1,30 @@
 <script lang="ts" setup>
-import { Edit, FileText, Github, HelpCircle, LogOut, Mail, User } from 'lucide-vue-next';
+import { Edit, FileText, Github, HelpCircle, Languages, LogOut, Mail, Menu, User, X } from 'lucide-vue-next';
 import { Toaster } from '@/components/ui/sonner';
 import { Button } from '@/components/ui/button';
 import 'vue-sonner/style.css';
-import { getDefaultFontForLanguage } from '~/types/resume';
 
-const { t, locale, setLocale } = useI18n();
+const { t, locale, locales } = useI18n();
+const { switchLanguage } = useLanguageSwitcher();
 
-const switchLanguage = (newLocale: string) => {
-    setLocale(newLocale);
-    // Update document direction immediately
-    if (import.meta.client) {
-        document.documentElement.dir = newLocale === 'ar' ? 'rtl' : 'ltr';
-        document.documentElement.lang = newLocale;
-
-        // Update font to default for new language
-        const settingsStore = useSettingsStore();
-        const newDefaultFont = getDefaultFontForLanguage(newLocale);
-        settingsStore.setSelectedFont(newDefaultFont);
-    }
-};
+const localesList = computed(() => {
+    return locales.value.map(l => ({
+        code: l.code,
+        name: l.name || l.code,
+    }));
+});
 
 const authStore = useAuthStore();
+const isMobileMenuOpen = ref(false);
+
 const handleLogout = async () => {
     await authStore.logout();
 };
+
+const closeMobileMenu = () => {
+    isMobileMenuOpen.value = false;
+};
+
 onMounted(async () => {
     await authStore.initializeAuth();
 });
@@ -62,23 +62,25 @@ onMounted(async () => {
                             </NuxtLink>
 
                             <!-- Language Selector -->
-                            <div class="relative">
+                            <div class="relative flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors">
+                                <Languages class="w-4 h-4" />
                                 <select
                                     :value="locale"
-                                    class="flex items-center space-x-1 md:space-x-2 text-gray-600 hover:text-gray-900 transition-colors bg-transparent border-none text-sm font-medium cursor-pointer"
+                                    class="bg-transparent border-none text-sm font-medium cursor-pointer focus:outline-none"
                                     @change="switchLanguage($event.target.value)"
                                 >
-                                    <option value="en">
-                                        English
-                                    </option>
-                                    <option value="ar">
-                                        العربية
+                                    <option
+                                        v-for="loc in localesList"
+                                        :key="loc.code"
+                                        :value="loc.code"
+                                    >
+                                        {{ loc.name }}
                                     </option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-2 md:space-x-6">
+                    <div class="hidden md:flex items-center space-x-2 md:space-x-6">
                         <ClientOnly>
                             <template v-if="!authStore.isLoggedIn">
                                 <NuxtLink to="/auth/login">
@@ -148,6 +150,115 @@ onMounted(async () => {
                             <span class="hidden sm:inline text-sm font-medium">{{
                                 t('navigation.github', 'GitHub')
                             }}</span>
+                        </a>
+                    </div>
+                    <!-- Mobile Menu Button -->
+                    <button
+                        class="md:hidden p-2 text-gray-600 hover:text-gray-900"
+                        @click="isMobileMenuOpen = !isMobileMenuOpen"
+                    >
+                        <Menu
+                            v-if="!isMobileMenuOpen"
+                            class="w-6 h-6"
+                        />
+                        <X
+                            v-else
+                            class="w-6 h-6"
+                        />
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile Menu -->
+            <div
+                v-if="isMobileMenuOpen"
+                class="md:hidden border-t border-gray-200 bg-white"
+            >
+                <div class="px-4 py-4 space-y-4">
+                    <!-- Auth Section -->
+                    <ClientOnly>
+                        <div
+                            v-if="!authStore.isLoggedIn"
+                            class="flex flex-col space-y-2"
+                        >
+                            <NuxtLink
+                                to="/auth/login"
+                                @click="closeMobileMenu"
+                            >
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    class="w-full justify-start text-gray-600 hover:text-gray-900"
+                                >
+                                    <User class="w-4 h-4 mr-2" />
+                                    {{ t('navigation.signIn') }}
+                                </Button>
+                            </NuxtLink>
+                            <NuxtLink
+                                to="/auth/register"
+                                @click="closeMobileMenu"
+                            >
+                                <Button
+                                    size="sm"
+                                    class="w-full"
+                                >
+                                    {{ t('navigation.signUp') }}
+                                </Button>
+                            </NuxtLink>
+                        </div>
+                        <div
+                            v-else
+                            class="flex flex-col space-y-2"
+                        >
+                            <NuxtLink
+                                to="/profile"
+                                class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 p-2"
+                                @click="closeMobileMenu"
+                            >
+                                <User class="w-4 h-4" />
+                                <span>{{ authStore.currentUser?.name || authStore.currentUser?.email }}</span>
+                            </NuxtLink>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                class="w-full justify-start text-gray-600 hover:text-gray-900"
+                                @click="handleLogout(); closeMobileMenu()"
+                            >
+                                <LogOut class="w-4 h-4 mr-2" />
+                                {{ t('navigation.signOut') }}
+                            </Button>
+                        </div>
+                    </ClientOnly>
+
+                    <div class="h-px bg-gray-200" />
+
+                    <!-- Navigation Links -->
+                    <div class="flex flex-col space-y-2">
+                        <NuxtLink
+                            to="/contact"
+                            class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 p-2"
+                            @click="closeMobileMenu"
+                        >
+                            <Mail class="w-4 h-4" />
+                            <span>{{ t('navigation.contact', 'Contact') }}</span>
+                        </NuxtLink>
+                        <NuxtLink
+                            to="/qa"
+                            target="_blank"
+                            class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 p-2"
+                            @click="closeMobileMenu"
+                        >
+                            <HelpCircle class="w-4 h-4" />
+                            <span>{{ t('navigation.qa') }}</span>
+                        </NuxtLink>
+                        <a
+                            href="https://github.com/imkonsowa/resume-builder"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 p-2"
+                            @click="closeMobileMenu"
+                        >
+                            <Github class="w-4 h-4" />
+                            <span>{{ t('navigation.github', 'GitHub') }}</span>
                         </a>
                     </div>
                 </div>

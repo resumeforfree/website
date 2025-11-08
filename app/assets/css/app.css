@@ -51,7 +51,7 @@
     direction: rtl;
 }
 
-/* RTL spacing adjustments */
+/* RTL spacing adjustments for Tailwind space-x utilities */
 [dir="rtl"] .space-x-2 > * + * {
     margin-right: 0.5rem;
     margin-left: 0;
@@ -67,86 +67,9 @@
     margin-left: 0;
 }
 
-/* RTL flex adjustments */
-[dir="rtl"] .flex-row {
-    flex-direction: row-reverse;
-}
-
-/* RTL text alignment */
-[dir="rtl"] .text-left {
-    text-align: right;
-}
-
-[dir="rtl"] .text-right {
-    text-align: left;
-}
-
-/* RTL margin and padding adjustments */
-[dir="rtl"] .mr-2 {
-    margin-right: 0;
-    margin-left: 0.5rem;
-}
-
-[dir="rtl"] .ml-2 {
+[dir="rtl"] .space-x-6 > * + * {
+    margin-right: 1.5rem;
     margin-left: 0;
-    margin-right: 0.5rem;
-}
-
-[dir="rtl"] .mr-4 {
-    margin-right: 0;
-    margin-left: 1rem;
-}
-
-[dir="rtl"] .ml-4 {
-    margin-left: 0;
-    margin-right: 1rem;
-}
-
-[dir="rtl"] .pl-4 {
-    padding-left: 0;
-    padding-right: 1rem;
-}
-
-[dir="rtl"] .pr-4 {
-    padding-right: 0;
-    padding-left: 1rem;
-}
-
-/* RTL border adjustments */
-[dir="rtl"] .border-l {
-    border-left: 0;
-    border-right: 1px solid;
-}
-
-[dir="rtl"] .border-r {
-    border-right: 0;
-    border-left: 1px solid;
-}
-
-/* RTL positioning adjustments */
-[dir="rtl"] .left-0 {
-    left: auto;
-    right: 0;
-}
-
-[dir="rtl"] .right-0 {
-    right: auto;
-    left: 0;
-}
-
-[dir="rtl"] .left-6 {
-    left: auto;
-    right: 1.5rem;
-}
-
-[dir="rtl"] .right-6 {
-    right: auto;
-    left: 1.5rem;
-}
-
-/* RTL transform adjustments for icons */
-[dir="rtl"] .chevron-right {
-    transform: rotate(180deg);
 }
 
 /* RTL form adjustments */
@@ -192,4 +115,127 @@
 /* Button spacing in RTL */
 [dir="rtl"] .inline-flex.items-center.gap-2 {
     flex-direction: row-reverse;
+}
+
+/* RTL flex-row fix */
+[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+}
+
+/* RTL margin/padding fixes */
+[dir="rtl"] .mr-1 {
+    margin-left: 0.25rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-1 {
+    margin-right: 0.25rem;
+    margin-left: 0;
+}
+
+[dir="rtl"] .mr-2 {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-2 {
+    margin-right: 0.5rem;
+    margin-left: 0;
+}
+
+[dir="rtl"] .mr-3 {
+    margin-left: 0.75rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-3 {
+    margin-right: 0.75rem;
+    margin-left: 0;
+}
+
+[dir="rtl"] .mr-4 {
+    margin-left: 1rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-4 {
+    margin-right: 1rem;
+    margin-left: 0;
+}
+
+[dir="rtl"] .mr-6 {
+    margin-left: 1.5rem;
+    margin-right: 0;
+}
+
+[dir="rtl"] .ml-6 {
+    margin-right: 1.5rem;
+    margin-left: 0;
+}
+
+/* RTL padding fixes */
+[dir="rtl"] .pr-2 {
+    padding-left: 0.5rem;
+    padding-right: 0;
+}
+
+[dir="rtl"] .pl-2 {
+    padding-right: 0.5rem;
+    padding-left: 0;
+}
+
+[dir="rtl"] .pr-4 {
+    padding-left: 1rem;
+    padding-right: 0;
+}
+
+[dir="rtl"] .pl-4 {
+    padding-right: 1rem;
+    padding-left: 0;
+}
+
+/* RTL border fixes */
+[dir="rtl"] .border-l {
+    border-left: none;
+    border-right: 1px solid;
+}
+
+[dir="rtl"] .border-r {
+    border-right: none;
+    border-left: 1px solid;
+}
+
+/* RTL rounded corners */
+[dir="rtl"] .rounded-l {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+[dir="rtl"] .rounded-r {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+/* RTL positioning */
+[dir="rtl"] .left-0 {
+    left: auto;
+    right: 0;
+}
+
+[dir="rtl"] .right-0 {
+    right: auto;
+    left: 0;
+}
+
+/* RTL text alignment */
+[dir="rtl"] .text-left {
+    text-align: right;
+}
+
+[dir="rtl"] .text-right {
+    text-align: left;
 }
