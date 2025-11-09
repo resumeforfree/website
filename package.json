@@ -11,7 +11,10 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20250906.0",
@@ -31,6 +34,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.44.7",
     "lucide-vue-next": "^0.525.0",
     "nitro-cloudflare-dev": "^0.2.2",
     "nuxt": "^4.0.0",
@@ -49,6 +53,7 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.6.0",
     "@types/bcryptjs": "^2.4.6",
+    "drizzle-kit": "^0.31.6",
     "eslint": "^9.0.0",
     "typescript": "^5.8.3",
     "wrangler": "^4.25.0"

@@ -1,19 +1,13 @@
-import type { D1Database } from '@cloudflare/workers-types';
+import { count, desc, or, like, eq } from 'drizzle-orm';
+import { resumes, users } from '../../../database/schema';
 
 export default defineEventHandler(async (event) => {
     // Verify admin authentication
     await requireAdmin(event);
 
-    const db = event.context.cloudflare?.env?.DB as D1Database;
-
-    if (!db) {
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Database not configured',
-        });
-    }
-
     try {
+        const db = useDrizzle(event);
+
         // Get pagination and search params
         const query = getQuery(event);
         const page = Math.max(1, parseInt(query.page as string) || 1);
@@ -22,46 +16,41 @@ export default defineEventHandler(async (event) => {
         const search = (query.search as string || '').trim();
 
         // Build WHERE clause for search
-        let whereClause = '';
-        let params: any[] = [];
+        const whereCondition = search
+            ? or(
+                like(resumes.name, `%${search}%`),
+                like(users.email, `%${search}%`),
+            )
+            : undefined;
 
-        if (search) {
-            whereClause = 'WHERE r.name LIKE ? OR u.email LIKE ?';
-            const searchPattern = `%${search}%`;
-            params = [searchPattern, searchPattern];
-        }
+        // Get total count and resumes in parallel
+        const [totalResult, resumesResult] = await Promise.all([
+            db.select({ count: count() })
+                .from(resumes)
+                .leftJoin(users, eq(resumes.userId, users.id))
+                .where(whereCondition),
+            db.select({
+                id: resumes.id,
+                user_id: resumes.userId,
+                name: resumes.name,
+                template: resumes.template,
+                is_active: resumes.isActive,
+                created_at: resumes.createdAt,
+                updated_at: resumes.updatedAt,
+                user_email: users.email,
+            })
+                .from(resumes)
+                .leftJoin(users, eq(resumes.userId, users.id))
+                .where(whereCondition)
+                .orderBy(desc(resumes.createdAt))
+                .limit(limit)
+                .offset(offset),
+        ]);
 
-        // Get total count
-        const countQuery = `
-            SELECT COUNT(*) as total
-            FROM resumes r
-            LEFT JOIN users u ON r.user_id = u.id
-            ${whereClause}
-        `;
-        const countResult = await db.prepare(countQuery).bind(...params).first<{ total: number }>();
-        const total = countResult?.total || 0;
-
-        // Fetch paginated resumes with user email
-        const resumesQuery = `
-            SELECT
-                r.id,
-                r.user_id,
-                r.name,
-                r.template,
-                r.is_active,
-                r.created_at,
-                r.updated_at,
-                u.email as user_email
-            FROM resumes r
-            LEFT JOIN users u ON r.user_id = u.id
-            ${whereClause}
-            ORDER BY r.created_at DESC
-            LIMIT ? OFFSET ?
-        `;
-        const result = await db.prepare(resumesQuery).bind(...params, limit, offset).all();
+        const total = totalResult[0]?.count || 0;
 
         return {
-            resumes: result.results || [],
+            resumes: resumesResult,
             pagination: {
                 page,
                 limit,

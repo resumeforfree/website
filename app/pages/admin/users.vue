@@ -102,23 +102,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                         {{ formatDate(user.created_at) }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <Button
-                                            v-if="user.role === 'user'"
-                                            variant="outline"
-                                            size="sm"
-                                            @click="updateRole(user.id, 'admin')"
-                                        >
-                                            {{ $t('admin.users.actions.makeAdmin') }}
-                                        </Button>
-                                        <Button
-                                            v-else
-                                            variant="outline"
-                                            size="sm"
-                                            @click="updateRole(user.id, 'user')"
-                                        >
-                                            {{ $t('admin.users.actions.removeAdmin') }}
-                                        </Button>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <Button
                                             variant="destructive"
                                             size="sm"
@@ -253,27 +237,6 @@ watch(debouncedQuery, () => {
 const goToPage = (page: number) => {
     currentPage.value = page;
     fetchUsers();
-};
-
-const updateRole = async (userId: string, newRole: 'user' | 'admin') => {
-    try {
-        await $fetch(`/api/admin/users/${userId}/role`, {
-            method: 'PATCH',
-            body: { role: newRole },
-        });
-
-        // Update local state
-        const user = users.value.find(u => u.id === userId);
-        if (user) {
-            user.role = newRole;
-        }
-
-        toast.success(t('admin.users.success.roleUpdated'));
-    }
-    catch (error) {
-        console.error('Error updating user role:', error);
-        toast.error(t('admin.users.errors.updateFailed'));
-    }
 };
 
 const confirmDelete = (userId: string) => {

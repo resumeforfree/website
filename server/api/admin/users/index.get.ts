@@ -1,19 +1,13 @@
-import type { D1Database } from '@cloudflare/workers-types';
+import { count, desc, or, like } from 'drizzle-orm';
+import { users } from '../../../database/schema';
 
 export default defineEventHandler(async (event) => {
     // Verify admin authentication
     await requireAdmin(event);
 
-    const db = event.context.cloudflare?.env?.DB as D1Database;
-
-    if (!db) {
-        throw createError({
-            statusCode: 500,
-            statusMessage: 'Database not configured',
-        });
-    }
-
     try {
+        const db = useDrizzle(event);
+
         // Get pagination and search params
         const query = getQuery(event);
         const page = Math.max(1, parseInt(query.page as string) || 1);
@@ -22,39 +16,38 @@ export default defineEventHandler(async (event) => {
         const search = (query.search as string || '').trim();
 
         // Build WHERE clause for search
-        let whereClause = '';
-        let params: any[] = [];
+        const whereCondition = search
+            ? or(
+                like(users.email, `%${search}%`),
+                like(users.name, `%${search}%`),
+            )
+            : undefined;
 
-        if (search) {
-            whereClause = 'WHERE email LIKE ? OR name LIKE ?';
-            const searchPattern = `%${search}%`;
-            params = [searchPattern, searchPattern];
-        }
+        // Get total count and users in parallel
+        const [totalResult, usersResult] = await Promise.all([
+            db.select({ count: count() })
+                .from(users)
+                .where(whereCondition),
+            db.select({
+                id: users.id,
+                email: users.email,
+                name: users.name,
+                role: users.role,
+                verified: users.verified,
+                created_at: users.createdAt,
+                updated_at: users.updatedAt,
+            })
+                .from(users)
+                .where(whereCondition)
+                .orderBy(desc(users.createdAt))
+                .limit(limit)
+                .offset(offset),
+        ]);
 
-        // Get total count
-        const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
-        const countResult = await db.prepare(countQuery).bind(...params).first<{ total: number }>();
-        const total = countResult?.total || 0;
-
-        // Fetch paginated users
-        const usersQuery = `
-            SELECT
-                id,
-                email,
-                name,
-                role,
-                verified,
-                created_at,
-                updated_at
-            FROM users
-            ${whereClause}
-            ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-        `;
-        const result = await db.prepare(usersQuery).bind(...params, limit, offset).all();
+        const total = totalResult[0]?.count || 0;
 
         return {
-            users: result.results || [],
+            users: usersResult,
             pagination: {
                 page,
                 limit,
