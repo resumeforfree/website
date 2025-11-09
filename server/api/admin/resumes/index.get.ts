@@ -14,18 +14,35 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Get pagination params
+        // Get pagination and search params
         const query = getQuery(event);
         const page = Math.max(1, parseInt(query.page as string) || 1);
         const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 50));
         const offset = (page - 1) * limit;
+        const search = (query.search as string || '').trim();
+
+        // Build WHERE clause for search
+        let whereClause = '';
+        let params: any[] = [];
+
+        if (search) {
+            whereClause = 'WHERE r.name LIKE ? OR u.email LIKE ?';
+            const searchPattern = `%${search}%`;
+            params = [searchPattern, searchPattern];
+        }
 
         // Get total count
-        const countResult = await db.prepare('SELECT COUNT(*) as total FROM resumes').first<{ total: number }>();
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM resumes r
+            LEFT JOIN users u ON r.user_id = u.id
+            ${whereClause}
+        `;
+        const countResult = await db.prepare(countQuery).bind(...params).first<{ total: number }>();
         const total = countResult?.total || 0;
 
         // Fetch paginated resumes with user email
-        const result = await db.prepare(`
+        const resumesQuery = `
             SELECT
                 r.id,
                 r.user_id,
@@ -37,9 +54,11 @@ export default defineEventHandler(async (event) => {
                 u.email as user_email
             FROM resumes r
             LEFT JOIN users u ON r.user_id = u.id
+            ${whereClause}
             ORDER BY r.created_at DESC
             LIMIT ? OFFSET ?
-        `).bind(limit, offset).all();
+        `;
+        const result = await db.prepare(resumesQuery).bind(...params, limit, offset).all();
 
         return {
             resumes: result.results || [],

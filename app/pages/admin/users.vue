@@ -7,6 +7,23 @@
                 </p>
             </div>
 
+            <!-- Search Bar -->
+            <div class="relative">
+                <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                    v-model="searchQuery"
+                    type="text"
+                    :placeholder="$t('admin.users.searchPlaceholder')"
+                    class="pl-10"
+                />
+                <div
+                    v-if="isSearching"
+                    class="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+                </div>
+            </div>
+
             <!-- Loading State -->
             <div
                 v-if="loading"
@@ -160,9 +177,10 @@
 </template>
 
 <script lang="ts" setup>
-import { Users } from 'lucide-vue-next';
+import { Users, Search } from 'lucide-vue-next';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
 import { toast } from 'vue-sonner';
 
 definePageMeta({
@@ -191,6 +209,12 @@ const pagination = ref({
     totalPages: 0,
 });
 
+// Setup debounced search
+const { searchQuery, debouncedQuery, isSearching, abortController } = useDebouncedSearch({
+    debounceMs: 400,
+    minLength: 2,
+});
+
 const fetchUsers = async () => {
     loading.value = true;
     try {
@@ -198,19 +222,33 @@ const fetchUsers = async () => {
             query: {
                 page: currentPage.value,
                 limit: 50,
+                search: debouncedQuery.value || undefined,
             },
+            signal: abortController.value?.signal,
         });
         users.value = data.users || [];
         pagination.value = data.pagination;
     }
-    catch (error) {
+    catch (error: any) {
+        // Ignore abort errors
+        if (error.name === 'AbortError') {
+            return;
+        }
         console.error('Error fetching users:', error);
         toast.error(t('admin.users.errors.fetchFailed'));
     }
     finally {
         loading.value = false;
+        isSearching.value = false;
     }
 };
+
+// Watch for search query changes
+watch(debouncedQuery, () => {
+    currentPage.value = 1; // Reset to first page on search
+    isSearching.value = true;
+    fetchUsers();
+});
 
 const goToPage = (page: number) => {
     currentPage.value = page;

@@ -14,18 +14,30 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Get pagination params
+        // Get pagination and search params
         const query = getQuery(event);
         const page = Math.max(1, parseInt(query.page as string) || 1);
         const limit = Math.min(100, Math.max(1, parseInt(query.limit as string) || 50));
         const offset = (page - 1) * limit;
+        const search = (query.search as string || '').trim();
+
+        // Build WHERE clause for search
+        let whereClause = '';
+        let params: any[] = [];
+
+        if (search) {
+            whereClause = 'WHERE email LIKE ? OR name LIKE ?';
+            const searchPattern = `%${search}%`;
+            params = [searchPattern, searchPattern];
+        }
 
         // Get total count
-        const countResult = await db.prepare('SELECT COUNT(*) as total FROM users').first<{ total: number }>();
+        const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+        const countResult = await db.prepare(countQuery).bind(...params).first<{ total: number }>();
         const total = countResult?.total || 0;
 
         // Fetch paginated users
-        const result = await db.prepare(`
+        const usersQuery = `
             SELECT
                 id,
                 email,
@@ -35,9 +47,11 @@ export default defineEventHandler(async (event) => {
                 created_at,
                 updated_at
             FROM users
+            ${whereClause}
             ORDER BY created_at DESC
             LIMIT ? OFFSET ?
-        `).bind(limit, offset).all();
+        `;
+        const result = await db.prepare(usersQuery).bind(...params, limit, offset).all();
 
         return {
             users: result.results || [],
