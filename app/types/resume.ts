@@ -196,9 +196,9 @@ export const defaultResumeData: ResumeData = {
         certificates: 'Certificates',
     },
     sectionPlacement: {
-        skills: 'right',
-        projects: 'right',
-        volunteering: 'right',
+        skills: 'left',
+        projects: 'left',
+        volunteering: 'left',
         languages: 'right',
         certificates: 'right',
     },
