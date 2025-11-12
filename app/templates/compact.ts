@@ -106,7 +106,7 @@ const parse = (data: ResumeData, font: string, locale = 'en', t: (key: string) =
     const isRtl = isRtlLocale(locale);
 
     const config = COMPACT_LAYOUT_CONFIG;
-    const context = new RendererContext(t, fontSize, config);
+    const context = new RendererContext(t, fontSize, config, locale);
     const sharedRenderers = getSharedSectionRenderers();
 
     const sectionRenderers: Record<string, () => string> = {

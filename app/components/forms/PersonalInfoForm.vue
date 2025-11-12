@@ -72,8 +72,8 @@
         </div>
         <div class="mt-6 space-y-4">
             <EditableHeader
-                :value="t('forms.personalInfo.summary')"
-                @update="(value) => resumeStore.updateSectionHeader('profile', value)"
+                :value="profileHeader"
+                @update="(value) => setSectionHeader('profile', value)"
             />
             <div class="space-y-2">
                 <Textarea
@@ -88,8 +88,8 @@
         <div class="mt-6 space-y-4">
             <div class="flex justify-between items-center">
                 <EditableHeader
-                    :value="t('forms.personalInfo.socialLinks')"
-                    @update="(value) => resumeStore.updateSectionHeader('socialLinks', value)"
+                    :value="socialLinksHeader"
+                    @update="(value) => setSectionHeader('socialLinks', value)"
                 />
                 <Button
                     size="sm"
@@ -235,7 +235,7 @@ import FormContainer from '~/components/elements/FormContainer.vue';
 import ConfirmationModal from '~/components/elements/ConfirmationModal.vue';
 import EditableHeader from '~/components/elements/EditableHeader.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const SOCIAL_PLATFORMS = computed(() => [
     { value: 'linkedin', label: t('platforms.linkedin'), icon: Linkedin },
@@ -251,6 +251,9 @@ const SOCIAL_PLATFORMS = computed(() => [
 
 const resumeStore = useResumeStore();
 const confirmation = useConfirmation();
+const { getSectionHeader, setSectionHeader } = useSectionHeader();
+const profileHeader = getSectionHeader('profile');
+const socialLinksHeader = getSectionHeader('socialLinks');
 const getPlatformIcon = (platform: string) => {
     const found = SOCIAL_PLATFORMS.value.find(p => p.value === platform);
     return found?.icon || Link;

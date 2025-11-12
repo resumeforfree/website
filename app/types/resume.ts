@@ -124,6 +124,7 @@ export interface ResumeData {
     softSkills: string;
     sectionOrder: SectionOrder;
     sectionHeaders: SectionHeaders;
+    sectionHeadersI18n?: Record<string, Partial<SectionHeaders>>;
     sectionPlacement: SectionPlacement;
 }
 export interface Resume {
@@ -181,20 +182,7 @@ export const defaultResumeData: ResumeData = {
         languages: 8,
         certificates: 9,
     },
-    sectionHeaders: {
-        personalInfo: 'Personal Information',
-        profile: 'Profile',
-        info: 'Info',
-        socialLinks: 'Links',
-        projects: 'Projects',
-        languages: 'Languages',
-        experience: 'Employment History',
-        internships: 'Internships',
-        education: 'Education',
-        skills: 'Skills',
-        volunteering: 'Volunteering',
-        certificates: 'Certificates',
-    },
+    sectionHeaders: {} as SectionHeaders,
     sectionPlacement: {
         skills: 'left',
         projects: 'left',

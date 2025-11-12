@@ -1,12 +1,12 @@
 <template>
     <FormContainer
         :is-empty="resumeStore.resumeData.education.length === 0"
-        :title="t('forms.education.title')"
+        :title="educationHeader"
         :add-button-label="t('forms.education.addEducation')"
         :empty-message="t('forms.education.emptyMessage')"
         section-key="education"
         @add="resumeStore.addEducation"
-        @edit-title="(value) => resumeStore.updateSectionHeader('education', value)"
+        @edit-title="(value) => setSectionHeader('education', value)"
     >
         <FormCard
             v-for="(education, index) in resumeStore.resumeData.education"
@@ -111,4 +111,6 @@ import FormContainer from '~/components/elements/FormContainer.vue';
 
 const resumeStore = useResumeStore();
 const { t } = useI18n();
+const { getSectionHeader, setSectionHeader } = useSectionHeader();
+const educationHeader = getSectionHeader('education');
 </script>

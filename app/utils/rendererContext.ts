@@ -5,5 +5,6 @@ export class RendererContext {
         public readonly t: (key: string) => string,
         public readonly fontSize: number,
         public readonly config: TemplateLayoutConfig,
+        public readonly locale: string,
     ) {}
 }

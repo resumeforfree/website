@@ -1,13 +1,13 @@
 <template>
     <FormContainer
         :is-empty="(resumeStore.resumeData.certificates?.length || 0) === 0"
-        :title="t('forms.certificates.title')"
+        :title="certificatesHeader"
         :add-button-label="t('forms.certificates.addCertificate')"
         :empty-message="t('forms.certificates.emptyMessage')"
         section-key="certificates"
         collapsible
         @add="resumeStore.addCertificate"
-        @edit-title="(value) => resumeStore.updateSectionHeader('certificates', value)"
+        @edit-title="(value) => setSectionHeader('certificates', value)"
     >
         <template #header-actions>
             <div
@@ -116,4 +116,6 @@ const resumeStore = useResumeStore();
 const confirmation = useConfirmation();
 const templateConfig = useTemplate();
 const { t } = useI18n();
+const { getSectionHeader, setSectionHeader } = useSectionHeader();
+const certificatesHeader = getSectionHeader('certificates');
 </script>
