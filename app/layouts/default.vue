@@ -15,10 +15,13 @@ const localesList = computed(() => {
 });
 
 const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
 const isMobileMenuOpen = ref(false);
+const { initializeSettingsFromServer, startSettingsSync, stopSettingsSync } = useSettingsSync();
 
 const handleLogout = async () => {
     await authStore.logout();
+    stopSettingsSync();
 };
 
 const closeMobileMenu = () => {
@@ -27,7 +30,24 @@ const closeMobileMenu = () => {
 
 onMounted(async () => {
     await authStore.initializeAuth();
+
+    if (authStore.isAuthenticated) {
+        await initializeSettingsFromServer();
+        startSettingsSync();
+    }
 });
+
+watch(
+    () => authStore.isAuthenticated,
+    async (isAuthenticated) => {
+        if (isAuthenticated) {
+            await initializeSettingsFromServer();
+            startSettingsSync();
+        } else {
+            stopSettingsSync();
+        }
+    },
+);
 </script>
 
 <template>

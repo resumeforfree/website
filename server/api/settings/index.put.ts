@@ -2,13 +2,20 @@ import jwt from '@tsndr/cloudflare-worker-jwt';
 import type { D1Database } from '@cloudflare/workers-types';
 
 const JWT_SECRET = process.env.JWT_SECRET;
+interface UserSettings {
+    id: string;
+    user_id: string;
+    settings: string | unknown;
+    created_at: string;
+    updated_at: string;
+}
 class DatabaseService {
     constructor(private db: D1Database) {}
-    async getUserSettings(userId: string): Promise<{ id: string; user_id: string } | null> {
+    async getUserSettings(userId: string): Promise<UserSettings | null> {
         return await this.db
             .prepare('SELECT * FROM user_settings WHERE user_id = ?')
             .bind(userId)
-            .first();
+            .first<UserSettings>();
     }
 
     async upsertUserSettings(userId: string, settings: unknown): Promise<void> {
@@ -63,8 +70,10 @@ export default defineEventHandler(async (event) => {
     }
     const dbService = new DatabaseService(db);
     await dbService.upsertUserSettings(userId, settings);
+    const updatedSettings = await dbService.getUserSettings(userId);
     return {
         success: true,
         settings,
+        updated_at: updatedSettings?.updated_at || null,
     };
 });

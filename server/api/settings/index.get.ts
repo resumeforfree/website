@@ -50,5 +50,6 @@ export default defineEventHandler(async (event) => {
                     ? JSON.parse(userSettings.settings)
                     : userSettings.settings)
             : {},
+        updated_at: userSettings?.updated_at || null,
     };
 });
