@@ -2,6 +2,7 @@ import type { ResumeData, SectionHeaders } from '~/types/resume';
 import type { SectionRenderer } from '~/types/templateConfig';
 import { ITEMS_SPACING, renderTemplateHeader } from './typstUtils';
 import { escapeTypstText } from '~/utils/stringUtils';
+import { SECTION_TRANSLATION_MAP } from '~/composables/useSectionHeader';
 import type { RendererContext } from './rendererContext';
 import {
     generateCertificatesContent,
@@ -42,22 +43,7 @@ function getLocalizedSectionHeader(
     }
 
     // Priority 2: Use translation (auto-switches with language)
-    const translationKeyMap: Record<string, string> = {
-        personalInfo: 'forms.personalInfo.title',
-        profile: 'forms.personalInfo.summary',
-        info: 'forms.personalInfo.title',
-        socialLinks: 'forms.personalInfo.socialLinks',
-        projects: 'forms.projects.title',
-        languages: 'forms.languages.title',
-        experience: 'forms.experience.title',
-        internships: 'forms.internships.title',
-        education: 'forms.education.title',
-        skills: 'forms.skills.title',
-        volunteering: 'forms.volunteering.title',
-        certificates: 'forms.certificates.title',
-    };
-
-    const translationKey = translationKeyMap[section];
+    const translationKey = SECTION_TRANSLATION_MAP[section];
     return translationKey ? context.t(translationKey) : '';
 }
 

@@ -1,12 +1,12 @@
 <template>
     <FormContainer
         :is-empty="resumeStore.resumeData.experiences.length === 0"
-        :title="resumeStore.getLocalizedSectionHeader('experience', locale, t)"
+        :title="experienceHeader"
         :add-button-label="t('forms.experience.addExperience')"
         :empty-message="t('forms.experience.emptyMessage')"
         section-key="experience"
         @add="resumeStore.addExperience"
-        @edit-title="(value) => resumeStore.updateSectionHeader('experience', value, locale)"
+        @edit-title="(value) => setSectionHeader('experience', value)"
     >
         <FormCard
             v-for="(experience, index) in resumeStore.resumeData.experiences"
@@ -183,4 +183,6 @@ import FormContainer from '~/components/elements/FormContainer.vue';
 
 const resumeStore = useResumeStore();
 const { t } = useI18n();
+const { getSectionHeader, setSectionHeader } = useSectionHeader();
+const experienceHeader = getSectionHeader('experience');
 </script>

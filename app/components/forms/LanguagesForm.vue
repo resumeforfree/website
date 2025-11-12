@@ -6,7 +6,7 @@
         :empty-message="t('forms.languages.emptyMessage')"
         section-key="languages"
         @add="resumeStore.addLanguage"
-        @edit-title="(value) => resumeStore.updateSectionHeader('languages', value, locale.value)"
+        @edit-title="(value) => setSectionHeader('languages', value)"
     >
         <template #header-actions>
             <div
@@ -96,7 +96,6 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import FormContainer from '~/components/elements/FormContainer.vue';
@@ -107,8 +106,6 @@ const resumeStore = useResumeStore();
 const confirmation = useConfirmation();
 const templateConfig = useTemplate();
 const { t } = useI18n();
-
-const sectionHeaderTitle = computed(() => {
-    return resumeStore.getLocalizedSectionHeader('languages', locale.value, t);
-});
+const { getSectionHeader, setSectionHeader } = useSectionHeader();
+const sectionHeaderTitle = getSectionHeader('languages');
 </script>

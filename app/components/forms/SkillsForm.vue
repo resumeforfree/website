@@ -1,12 +1,12 @@
 <template>
     <FormContainer
         :is-empty="resumeStore.resumeData.skills.length === 0"
-        :title="resumeStore.getLocalizedSectionHeader('skills', locale, t)"
+        :title="skillsHeader"
         :add-button-label="t('forms.skills.addSkill')"
         :empty-message="t('forms.skills.emptyMessage')"
         section-key="skills"
         @add="resumeStore.addSkill"
-        @edit-title="(value) => resumeStore.updateSectionHeader('skills', value, locale)"
+        @edit-title="(value) => setSectionHeader('skills', value)"
     >
         <template #header-actions>
             <div
@@ -73,4 +73,6 @@ import FormContainer from '~/components/elements/FormContainer.vue';
 const resumeStore = useResumeStore();
 const templateConfig = useTemplate();
 const { t } = useI18n();
+const { getSectionHeader, setSectionHeader } = useSectionHeader();
+const skillsHeader = getSectionHeader('skills');
 </script>

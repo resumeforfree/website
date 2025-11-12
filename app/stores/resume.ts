@@ -113,34 +113,6 @@ export const useResumeStore = defineStore('resume', {
             ];
             return sections.sort((a, b) => a.order - b.order);
         },
-        getLocalizedSectionHeader: (state) => (section: keyof SectionHeaders, locale: string, t: (key: string) => string): string => {
-            const data = state.activeResumeId ? state.resumes[state.activeResumeId]?.data : null;
-            if (!data) return '';
-
-            // Priority 1: Check i18n-specific header for current locale
-            if (data.sectionHeadersI18n?.[locale]?.[section]) {
-                return data.sectionHeadersI18n[locale][section] as string;
-            }
-
-            // Priority 2: Use translation (auto-switches with language)
-            const translationKeyMap: Record<string, string> = {
-                personalInfo: 'forms.personalInfo.title',
-                profile: 'forms.personalInfo.summary',
-                info: 'forms.personalInfo.title',
-                socialLinks: 'forms.personalInfo.socialLinks',
-                projects: 'forms.projects.title',
-                languages: 'forms.languages.title',
-                experience: 'forms.experience.title',
-                internships: 'forms.internships.title',
-                education: 'forms.education.title',
-                skills: 'forms.skills.title',
-                volunteering: 'forms.volunteering.title',
-                certificates: 'forms.certificates.title',
-            };
-
-            const translationKey = translationKeyMap[section];
-            return translationKey ? t(translationKey) : '';
-        },
     },
     actions: {
         initialize() {
@@ -186,6 +158,16 @@ export const useResumeStore = defineStore('resume', {
                         resume.data.sectionHeaders.certificates = 'Certificates';
                     }
                 }
+
+                // Migrate existing sectionHeaders to sectionHeadersI18n for backward compatibility
+                // This ensures custom headers are preserved when switching languages
+                // Default to 'en' since we can't reliably detect locale during store initialization
+                if (!resume.data.sectionHeadersI18n && resume.data.sectionHeaders) {
+                    resume.data.sectionHeadersI18n = {
+                        en: { ...resume.data.sectionHeaders },
+                    };
+                }
+
                 if (!resume.data.sectionPlacement) {
                     resume.data.sectionPlacement = { ...defaultResumeData.sectionPlacement };
                 }
