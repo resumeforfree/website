@@ -142,23 +142,8 @@ export const useResumeStore = defineStore('resume', {
                     }
                 }
                 if (!resume.data.sectionHeaders) {
-                    resume.data.sectionHeaders = { ...defaultResumeData.sectionHeaders };
+                    resume.data.sectionHeaders = {} as SectionHeaders;
                 }
-                else {
-                    if (resume.data.sectionHeaders.internships === undefined) {
-                        resume.data.sectionHeaders.internships = 'Internships';
-                    }
-                    if (resume.data.sectionHeaders.projects === undefined) {
-                        resume.data.sectionHeaders.projects = 'Projects';
-                    }
-                    if (resume.data.sectionHeaders.languages === undefined) {
-                        resume.data.sectionHeaders.languages = 'Languages';
-                    }
-                    if (resume.data.sectionHeaders.certificates === undefined) {
-                        resume.data.sectionHeaders.certificates = 'Certificates';
-                    }
-                }
-
                 if (!resume.data.sectionPlacement) {
                     resume.data.sectionPlacement = { ...defaultResumeData.sectionPlacement };
                 }
