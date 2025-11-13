@@ -2,7 +2,7 @@
     <Dialog
         v-model:open="isOpen"
     >
-        <DialogContent class="max-w-[80vw] w-[80vw] h-[90vh]">
+        <DialogContent class="!max-w-[80vw] !w-[80vw] h-[90vh]">
             <DialogHeader>
                 <DialogTitle>{{ resumeName }}</DialogTitle>
                 <DialogDescription>
