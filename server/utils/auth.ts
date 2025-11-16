@@ -44,15 +44,15 @@ export async function requireAdmin(event: H3Event): Promise<JWTPayload> {
 
     if (!payload) {
         throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized - Authentication required',
+            statusCode: 404,
+            statusMessage: 'Not found',
         });
     }
 
     if (payload.role !== 'admin') {
         throw createError({
-            statusCode: 403,
-            statusMessage: 'Forbidden - Admin access required',
+            statusCode: 404,
+            statusMessage: 'Not found',
         });
     }
 

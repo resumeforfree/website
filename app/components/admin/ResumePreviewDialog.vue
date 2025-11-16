@@ -83,13 +83,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '~/components/ui/button';
 import { X } from 'lucide-vue-next';
 import { useResumeGenerator } from '~/composables/useResumeGenerator';
-import type { ResumeData } from '~/types/resume';
+import type { ResumeData, AppSettings } from '~/types/resume';
+import { defaultAppSettings } from '~/types/resume';
 
 const props = defineProps<{
     modelValue: boolean;
     resumeId: string;
     resumeName: string;
     ownerEmail: string;
+    userId: string;
 }>();
 
 const emit = defineEmits<{
@@ -101,7 +103,7 @@ const { isReady: typstReady } = useTypstLoader();
 
 const isOpen = computed({
     get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value),
+    set: value => emit('update:modelValue', value),
 });
 
 const isLoading = ref(false);
@@ -116,11 +118,24 @@ const loadResume = async () => {
     previewContent.value = '';
 
     try {
-        // Fetch resume data from API
-        const response = await $fetch(`/api/admin/resumes/${props.resumeId}`);
-        const resumeData = response.data as ResumeData;
-        const template = response.template || 'default';
-        const font = 'Calibri'; // Default font for admin preview
+        // Fetch resume data and user settings in parallel
+        const [resumeResponse, userSettingsResponse] = await Promise.all([
+            $fetch(`/api/admin/resumes/${props.resumeId}`),
+            $fetch(`/api/admin/users/${props.userId}/settings`).catch(() => ({ settings: null })),
+        ]);
+
+        const resumeData = resumeResponse.data as ResumeData;
+
+        // Merge user settings with defaults (user settings take precedence)
+        const userSettings = userSettingsResponse.settings as AppSettings | null;
+        const settings: AppSettings = {
+            ...defaultAppSettings,
+            ...userSettings,
+        };
+
+        // Use user's preferred template and font
+        const template = settings.selectedTemplate || resumeResponse.template || 'default';
+        const font = settings.selectedFont || 'Calibri';
 
         // Wait for Typst to be ready
         if (!typstReady.value) {
@@ -142,7 +157,7 @@ const loadResume = async () => {
             throw new Error('Typst compiler not ready');
         }
 
-        // Generate preview
+        // Generate preview with user's font and template
         previewContent.value = await generatePreview(resumeData, template, font);
     }
     catch (err) {
