@@ -9,24 +9,11 @@
         @edit-title="(value) => setSectionHeader('volunteering', value)"
     >
         <template #header-actions>
-            <div
-                v-if="templateConfig.canMoveSection('volunteering')"
-                class="flex items-center gap-2"
-            >
-                <span class="text-sm text-gray-600">{{ t('forms.volunteering.column') }}:</span>
-                <select
-                    :value="resumeStore.resumeData.sectionPlacement.volunteering"
-                    class="px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    @change="(e) => resumeStore.updateSectionPlacement('volunteering', (e.target as HTMLSelectElement).value as 'left' | 'right')"
-                >
-                    <option value="left">
-                        {{ t('common.left', 'Left') }}
-                    </option>
-                    <option value="right">
-                        {{ t('common.right', 'Right') }}
-                    </option>
-                </select>
-            </div>
+            <SectionPlacementSelector
+                :placement="resumeStore.resumeData.sectionPlacement.volunteering"
+                :can-move="templateConfig.canMoveSection('volunteering')"
+                @update="(value) => resumeStore.updateSectionPlacement('volunteering', value)"
+            />
         </template>
         <FormCard
             v-for="(volunteering, index) in resumeStore.resumeData.volunteering"
@@ -95,99 +82,27 @@
                     </div>
                 </div>
             </div>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <Label>{{ t('common.achievements') }}</Label>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        @click="resumeStore.addVolunteeringAchievement(index)"
-                    >
-                        <Plus class="w-4 h-4 mr-2" />
-                        {{ t('common.addAchievement') }}
-                    </Button>
-                </div>
-                <div class="space-y-2">
-                    <div
-                        v-for="(_, achievementIndex) in volunteering.achievements"
-                        :key="achievementIndex"
-                        class="space-y-2"
-                    >
-                        <div class="flex items-center space-x-2 md:space-x-2">
-                            <Input
-                                :model-value="volunteering.achievements[achievementIndex].text"
-                                class="flex-1"
-                                :placeholder="t('common.achievementPlaceholder')"
-                                @update:model-value="(value) => resumeStore.updateVolunteeringAchievement(index, achievementIndex, value)"
-                                @keydown.enter="resumeStore.addVolunteeringAchievement(index)"
-                            />
-                            <div class="hidden md:flex items-center space-x-1">
-                                <Button
-                                    :disabled="achievementIndex === 0"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="resumeStore.moveVolunteeringAchievement(index, achievementIndex, achievementIndex - 1)"
-                                >
-                                    <ChevronUp class="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    :disabled="achievementIndex === volunteering.achievements.length - 1"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="resumeStore.moveVolunteeringAchievement(index, achievementIndex, achievementIndex + 1)"
-                                >
-                                    <ChevronDown class="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    @click="resumeStore.removeVolunteeringAchievement(index, achievementIndex)"
-                                >
-                                    <Trash2 class="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div class="flex md:hidden items-center justify-center space-x-2">
-                            <Button
-                                :disabled="achievementIndex === 0"
-                                size="sm"
-                                variant="outline"
-                                @click="resumeStore.moveVolunteeringAchievement(index, achievementIndex, achievementIndex - 1)"
-                            >
-                                <ChevronUp class="w-4 h-4" />
-                            </Button>
-                            <Button
-                                :disabled="achievementIndex === volunteering.achievements.length - 1"
-                                size="sm"
-                                variant="outline"
-                                @click="resumeStore.moveVolunteeringAchievement(index, achievementIndex, achievementIndex + 1)"
-                            >
-                                <ChevronDown class="w-4 h-4" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="resumeStore.removeVolunteeringAchievement(index, achievementIndex)"
-                            >
-                                <Trash2 class="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <AchievementsList
+                :achievements="volunteering.achievements"
+                @add="resumeStore.addVolunteeringAchievement(index)"
+                @update="(achIndex, value) => resumeStore.updateVolunteeringAchievement(index, achIndex, value)"
+                @remove="(achIndex) => resumeStore.removeVolunteeringAchievement(index, achIndex)"
+                @move-up="(achIndex) => resumeStore.moveVolunteeringAchievement(index, achIndex, achIndex - 1)"
+                @move-down="(achIndex) => resumeStore.moveVolunteeringAchievement(index, achIndex, achIndex + 1)"
+            />
         </FormCard>
     </FormContainer>
 </template>
 
 <script lang="ts" setup>
-import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Checkbox } from '~/components/ui/checkbox';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-vue-next';
 import MonthYearPicker from '~/components/elements/MonthYearPicker.vue';
 import FormCard from '~/components/elements/FormCard.vue';
 import FormContainer from '~/components/elements/FormContainer.vue';
+import AchievementsList from '~/components/forms/AchievementsList.vue';
+import SectionPlacementSelector from '~/components/forms/SectionPlacementSelector.vue';
 
 const resumeStore = useResumeStore();
 const templateConfig = useTemplate();

@@ -132,7 +132,7 @@ const emit = defineEmits<{
 }>();
 
 // i18n
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Store
 const settingsStore = useSettingsStore();
@@ -154,7 +154,7 @@ const selectedTemplateName = computed(() => {
 });
 
 const availableFonts = computed(() => {
-    return settingsStore.availableFontsForCurrentLanguage;
+    return settingsStore.getAvailableFonts(locale.value);
 });
 
 // Watch for external changes

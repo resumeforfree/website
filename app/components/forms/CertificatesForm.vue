@@ -10,24 +10,11 @@
         @edit-title="(value) => setSectionHeader('certificates', value)"
     >
         <template #header-actions>
-            <div
-                v-if="templateConfig.canMoveSection('certificates')"
-                class="flex items-center gap-2"
-            >
-                <span class="text-sm text-gray-600">{{ t('forms.certificates.column') }}:</span>
-                <select
-                    :value="resumeStore.resumeData.sectionPlacement.certificates"
-                    class="px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    @change="(e) => resumeStore.updateSectionPlacement('certificates', (e.target as HTMLSelectElement).value as 'left' | 'right')"
-                >
-                    <option value="left">
-                        {{ t('common.left', 'Left') }}
-                    </option>
-                    <option value="right">
-                        {{ t('common.right', 'Right') }}
-                    </option>
-                </select>
-            </div>
+            <SectionPlacementSelector
+                :placement="resumeStore.resumeData.sectionPlacement.certificates"
+                :can-move="templateConfig.canMoveSection('certificates')"
+                @update="(value) => resumeStore.updateSectionPlacement('certificates', value)"
+            />
         </template>
         <FormCard
             v-for="(certificate, index) in (resumeStore.resumeData.certificates || [])"
@@ -111,6 +98,7 @@ import MonthYearPicker from '~/components/elements/MonthYearPicker.vue';
 import FormContainer from '~/components/elements/FormContainer.vue';
 import FormCard from '~/components/elements/FormCard.vue';
 import ConfirmationModal from '~/components/elements/ConfirmationModal.vue';
+import SectionPlacementSelector from '~/components/forms/SectionPlacementSelector.vue';
 
 const resumeStore = useResumeStore();
 const confirmation = useConfirmation();

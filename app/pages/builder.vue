@@ -83,6 +83,7 @@ useHead({
         },
     ],
 });
+const { locale } = useI18n();
 const resumeStore = useResumeStore();
 const settingsStore = useSettingsStore();
 const authStore = useAuthStore();
@@ -91,7 +92,7 @@ const { startAutoSync, stopAutoSync, isSyncing, lastSyncSuccess, lastSyncTime, l
 useTypstLoader();
 
 onMounted(() => {
-    settingsStore.initialize();
+    settingsStore.initialize(locale.value);
     resumeStore.initialize();
 
     // Show first time modal for unauthenticated users

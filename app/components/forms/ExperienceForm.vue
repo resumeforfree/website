@@ -87,86 +87,14 @@
                     </div>
                 </div>
             </div>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <Label>{{ t('common.achievements') }}</Label>
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        @click="resumeStore.addExperienceAchievement(index)"
-                    >
-                        <Plus class="w-4 h-4 mr-2" />
-                        {{ t('common.addAchievement') }}
-                    </Button>
-                </div>
-                <div class="space-y-2">
-                    <div
-                        v-for="(_, achievementIndex) in experience.achievements"
-                        :key="achievementIndex"
-                        class="space-y-2"
-                    >
-                        <div class="flex items-center space-x-2 md:space-x-2">
-                            <Input
-                                :model-value="experience.achievements[achievementIndex].text"
-                                class="flex-1"
-                                :placeholder="t('common.achievementPlaceholder')"
-                                @update:model-value="(value) => resumeStore.updateExperienceAchievement(index, achievementIndex, value)"
-                                @keydown.enter="resumeStore.addExperienceAchievement(index)"
-                            />
-                            <div class="hidden md:flex items-center space-x-1">
-                                <Button
-                                    :disabled="achievementIndex === 0"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="resumeStore.moveExperienceAchievement(index, achievementIndex, achievementIndex - 1)"
-                                >
-                                    <ChevronUp class="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    :disabled="achievementIndex === experience.achievements.length - 1"
-                                    size="sm"
-                                    variant="outline"
-                                    @click="resumeStore.moveExperienceAchievement(index, achievementIndex, achievementIndex + 1)"
-                                >
-                                    <ChevronDown class="w-4 h-4" />
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    @click="resumeStore.removeExperienceAchievement(index, achievementIndex)"
-                                >
-                                    <Trash2 class="w-4 h-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <div class="flex md:hidden items-center justify-center space-x-2">
-                            <Button
-                                :disabled="achievementIndex === 0"
-                                size="sm"
-                                variant="outline"
-                                @click="resumeStore.moveExperienceAchievement(index, achievementIndex, achievementIndex - 1)"
-                            >
-                                <ChevronUp class="w-4 h-4" />
-                            </Button>
-                            <Button
-                                :disabled="achievementIndex === experience.achievements.length - 1"
-                                size="sm"
-                                variant="outline"
-                                @click="resumeStore.moveExperienceAchievement(index, achievementIndex, achievementIndex + 1)"
-                            >
-                                <ChevronDown class="w-4 h-4" />
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="resumeStore.removeExperienceAchievement(index, achievementIndex)"
-                            >
-                                <Trash2 class="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <AchievementsList
+                :achievements="experience.achievements"
+                @add="resumeStore.addExperienceAchievement(index)"
+                @update="(achIndex, value) => resumeStore.updateExperienceAchievement(index, achIndex, value)"
+                @remove="(achIndex) => resumeStore.removeExperienceAchievement(index, achIndex)"
+                @move-up="(achIndex) => resumeStore.moveExperienceAchievement(index, achIndex, achIndex - 1)"
+                @move-down="(achIndex) => resumeStore.moveExperienceAchievement(index, achIndex, achIndex + 1)"
+            />
         </FormCard>
     </FormContainer>
 </template>
@@ -176,10 +104,10 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Checkbox } from '~/components/ui/checkbox';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-vue-next';
 import MonthYearPicker from '~/components/elements/MonthYearPicker.vue';
 import FormCard from '~/components/elements/FormCard.vue';
 import FormContainer from '~/components/elements/FormContainer.vue';
+import AchievementsList from '~/components/forms/AchievementsList.vue';
 
 const resumeStore = useResumeStore();
 const { t } = useI18n();

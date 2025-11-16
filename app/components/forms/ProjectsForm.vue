@@ -9,24 +9,11 @@
         @edit-title="(value) => setSectionHeader('projects', value)"
     >
         <template #header-actions>
-            <div
-                v-if="templateConfig.canMoveSection('projects')"
-                class="flex items-center gap-2"
-            >
-                <span class="text-sm text-gray-600">{{ t('forms.projects.column') }}:</span>
-                <select
-                    :value="resumeStore.resumeData.sectionPlacement.projects"
-                    class="px-2 py-1 text-sm border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    @change="(e) => resumeStore.updateSectionPlacement('projects', (e.target as HTMLSelectElement).value as 'left' | 'right')"
-                >
-                    <option value="left">
-                        {{ t('common.left', 'Left') }}
-                    </option>
-                    <option value="right">
-                        {{ t('common.right', 'Right') }}
-                    </option>
-                </select>
-            </div>
+            <SectionPlacementSelector
+                :placement="resumeStore.resumeData.sectionPlacement.projects"
+                :can-move="templateConfig.canMoveSection('projects')"
+                @update="(value) => resumeStore.updateSectionPlacement('projects', value)"
+            />
         </template>
         <FormCard
             v-for="(project, index) in resumeStore.resumeData.projects"
@@ -91,6 +78,7 @@ import { Textarea } from '~/components/ui/textarea';
 import FormContainer from '~/components/elements/FormContainer.vue';
 import FormCard from '~/components/elements/FormCard.vue';
 import ConfirmationModal from '~/components/elements/ConfirmationModal.vue';
+import SectionPlacementSelector from '~/components/forms/SectionPlacementSelector.vue';
 
 const resumeStore = useResumeStore();
 const confirmation = useConfirmation();

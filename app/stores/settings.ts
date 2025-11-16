@@ -14,10 +14,6 @@ export const useSettingsStore = defineStore('settings', {
     getters: {
         selectedFont: state => state.settings.selectedFont,
         selectedTemplate: state => state.settings.selectedTemplate,
-        availableFontsForCurrentLanguage: () => {
-            const { locale } = useI18n();
-            return getFontsForLanguage(locale.value);
-        },
         isRawMode: state => state.settings.isRawMode,
         showDownloadMenu: state => state.settings.showDownloadMenu,
         showFontMenu: state => state.settings.showFontMenu,
@@ -28,6 +24,9 @@ export const useSettingsStore = defineStore('settings', {
     actions: {
         updateTimestamp() {
             this.lastUpdated = Date.now();
+        },
+        getAvailableFonts(locale: string) {
+            return getFontsForLanguage(locale);
         },
         setSelectedFont(font: string) {
             this.settings.selectedFont = font;
@@ -107,7 +106,7 @@ export const useSettingsStore = defineStore('settings', {
             });
             this.updateTimestamp();
         },
-        initialize() {
+        initialize(currentLocale?: string) {
             if (!this.settings.sectionCollapsed || Object.keys(this.settings.sectionCollapsed).length === 0) {
                 this.settings.sectionCollapsed = {
                     personal: false,
@@ -121,10 +120,9 @@ export const useSettingsStore = defineStore('settings', {
                     certificates: true,
                 };
             }
-            // Initialize locale from i18n if not set
-            if (!this.settings.locale) {
-                const { locale } = useI18n();
-                this.settings.locale = locale.value;
+            // Initialize locale from parameter if not set
+            if (!this.settings.locale && currentLocale) {
+                this.settings.locale = currentLocale;
             }
         },
         initializeFromServer(serverSettings: AppSettings, serverUpdatedAt: string) {

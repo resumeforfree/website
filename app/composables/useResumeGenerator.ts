@@ -48,106 +48,68 @@ export const useResumeGenerator = () => {
             throw error;
         }
     };
-    const downloadPDF = async (
-        resumeData: ResumeData,
-        templateId = 'default',
-        font = 'Calibri',
-    ): Promise<void> => {
-        try {
-            const pdfData = await generatePDF(resumeData, templateId, font);
-            const firstName = resumeData.firstName || 'Resume';
-            const lastName = resumeData.lastName || '';
-            const position = resumeData.position || '';
-            const filenameParts = [firstName, lastName, position, 'resume'].filter(Boolean);
-            const filename = `${filenameParts.join('_')}.pdf`;
-            const blob = new Blob([pdfData], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-        catch (error) {
-            console.error('PDF download error:', error);
-            throw error;
-        }
+    // Shared filename builder
+    const buildFilename = (resumeData: ResumeData, extension: string): string => {
+        const firstName = resumeData.firstName || 'Resume';
+        const lastName = resumeData.lastName || '';
+        const position = resumeData.position || '';
+        const parts = [firstName, lastName, position, 'resume'].filter(Boolean);
+        return `${parts.join('_')}.${extension}`;
     };
-    const downloadSVG = async (
-        resumeData: ResumeData,
-        templateId = 'default',
-        font = 'Calibri',
-    ): Promise<void> => {
-        try {
-            const svgContent = await generatePreview(resumeData, templateId, font);
-            const firstName = resumeData.firstName || 'Resume';
-            const lastName = resumeData.lastName || '';
-            const position = resumeData.position || '';
-            const filenameParts = [firstName, lastName, position, 'resume'].filter(Boolean);
-            const filename = `${filenameParts.join('_')}.svg`;
-            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-        catch (error) {
-            console.error('SVG download error:', error);
-            throw error;
-        }
+
+    // Generic download helper
+    const downloadBlob = (blob: Blob, filename: string): void => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
     };
-    const downloadTypst = (
-        resumeData: ResumeData,
-        templateId = 'default',
-        font = 'Calibri',
-    ): void => {
-        try {
-            const typstContent = generateTypstContent(resumeData, templateId, font);
-            const firstName = resumeData.firstName || 'Resume';
-            const lastName = resumeData.lastName || '';
-            const position = resumeData.position || '';
-            const filenameParts = [firstName, lastName, position, 'resume'].filter(Boolean);
-            const filename = `${filenameParts.join('_')}.typ`;
-            const blob = new Blob([typstContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-        catch (error) {
-            console.error('Typst download error:', error);
-            throw error;
-        }
+
+    // Generic async download function factory
+    const createDownloader = <T>(
+        generator: (resumeData: ResumeData, templateId: string, font: string) => Promise<T> | T,
+        blobConfig: { type: string; extension: string },
+    ) => {
+        return async (
+            resumeData: ResumeData,
+            templateId = 'default',
+            font = 'Calibri',
+        ): Promise<void> => {
+            try {
+                const content = await generator(resumeData, templateId, font);
+                const filename = buildFilename(resumeData, blobConfig.extension);
+                const blob = new Blob([content as Uint8Array | string], { type: blobConfig.type });
+                downloadBlob(blob, filename);
+            }
+            catch (error) {
+                console.error(`${blobConfig.extension.toUpperCase()} download error:`, error);
+                throw error;
+            }
+        };
     };
-    const downloadTypstText = (
-        resumeData: ResumeData,
-        templateId = 'default',
-        font = 'Calibri',
-    ): void => {
-        try {
-            const typstContent = generateTypstContent(resumeData, templateId, font);
-            const firstName = resumeData.firstName || 'Resume';
-            const lastName = resumeData.lastName || '';
-            const position = resumeData.position || '';
-            const filenameParts = [firstName, lastName, position, 'resume'].filter(Boolean);
-            const filename = `${filenameParts.join('_')}.txt`;
-            const blob = new Blob([typstContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-        catch (error) {
-            console.error('Typst text download error:', error);
-            throw error;
-        }
-    };
+
+    // Create all downloaders using the factory
+    const downloadPDF = createDownloader(
+        generatePDF,
+        { type: 'application/pdf', extension: 'pdf' },
+    );
+
+    const downloadSVG = createDownloader(
+        generatePreview,
+        { type: 'image/svg+xml', extension: 'svg' },
+    );
+
+    const downloadTypst = createDownloader(
+        generateTypstContent,
+        { type: 'text/plain', extension: 'typ' },
+    );
+
+    const downloadTypstText = createDownloader(
+        generateTypstContent,
+        { type: 'text/plain', extension: 'txt' },
+    );
     return {
         typstReady,
         typstLoading,

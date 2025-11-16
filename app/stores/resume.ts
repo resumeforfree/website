@@ -16,6 +16,7 @@ import type {
     Volunteering,
 } from '~/types/resume';
 import { defaultResumeData } from '~/types/resume';
+import { useArrayCRUD, useNestedAchievementsCRUD } from '~/composables/useArrayCRUD';
 
 interface ResumeStoreState {
     resumes: Record<string, Resume>;
@@ -26,6 +27,7 @@ interface ResumeStoreState {
     isSyncing: boolean;
     userId: string | null;
 }
+
 export const useResumeStore = defineStore('resume', {
     state: (): ResumeStoreState => ({
         resumes: {},
@@ -172,6 +174,8 @@ export const useResumeStore = defineStore('resume', {
                 this.activeResumeId = Object.keys(this.resumes)[0];
             }
         },
+
+        // Resume management
         createResume(name?: string): string {
             const id = `resume-${this.nextId}`;
             const timestamp = new Date().toISOString();
@@ -188,34 +192,40 @@ export const useResumeStore = defineStore('resume', {
             }
             return id;
         },
+
         setActiveResume(id: string): void {
             if (this.resumes[id]) {
                 this.activeResumeId = id;
             }
         },
+
         updateResumeData(id: string, data: Partial<ResumeData>): void {
             if (this.resumes[id]) {
                 this.resumes[id].data = { ...this.resumes[id].data, ...data };
                 this.resumes[id].updatedAt = new Date().toISOString();
             }
         },
+
         updateActiveResumeData(data: Partial<ResumeData>): void {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, data);
             }
         },
+
         renameResume(id: string, name: string): void {
             if (this.resumes[id]) {
                 this.resumes[id].name = name;
                 this.resumes[id].updatedAt = new Date().toISOString();
             }
         },
+
         updateServerId(id: string, serverId: string): void {
             if (this.resumes[id]) {
                 this.resumes[id].serverId = serverId;
                 this.resumes[id].updatedAt = new Date().toISOString();
             }
         },
+
         deleteResume(id: string): void {
             if (this.resumes[id]) {
                 const { [id]: deletedResume, ...remainingResumes } = this.resumes;
@@ -226,6 +236,7 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
+
         duplicateResume(id: string, customName?: string): string {
             if (this.resumes[id]) {
                 const originalResume = this.resumes[id];
@@ -243,6 +254,7 @@ export const useResumeStore = defineStore('resume', {
             }
             return '';
         },
+
         updateField(field: keyof ResumeData, value: unknown) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -250,549 +262,345 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, updateData);
             }
         },
+
+        // Factory methods for creating CRUD operations
+        createArrayCRUD<T>(
+            arrayKey: keyof ResumeData,
+            defaultItem: () => T,
+        ) {
+            if (!this.activeResumeId) return null;
+
+            const activeId = this.activeResumeId;
+            return useArrayCRUD<T>(
+                () => this.resumes[activeId].data[arrayKey] as T[],
+                (items: T[]) => this.updateResumeData(activeId, { [arrayKey]: items } as Partial<ResumeData>),
+                defaultItem,
+            );
+        },
+
+        createNestedAchievementsCRUD<T extends { achievements: Array<{ text: string }> }>(
+            arrayKey: keyof ResumeData,
+        ) {
+            if (!this.activeResumeId) return null;
+
+            const activeId = this.activeResumeId;
+            return useNestedAchievementsCRUD<T>(
+                () => this.resumes[activeId].data[arrayKey] as T[],
+                (items: T[]) => this.updateResumeData(activeId, { [arrayKey]: items } as Partial<ResumeData>),
+            );
+        },
+
+        // Experience methods
         addExperience() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newExperiences = [...currentData.experiences, {
-                    company: '',
-                    position: '',
-                    location: '',
-                    companyUrl: '',
-                    startDate: '',
-                    endDate: '',
-                    isPresent: false,
-                    achievements: [{ text: '' }],
-                }];
-                this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-            }
+            const crud = this.createArrayCRUD<Experience>('experiences', () => ({
+                company: '',
+                position: '',
+                location: '',
+                companyUrl: '',
+                startDate: '',
+                endDate: '',
+                isPresent: false,
+                achievements: [{ text: '' }],
+            }));
+            crud?.add();
         },
+
         updateExperience(index: number, field: keyof Experience, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.experiences[index]) {
-                    const newExperiences = [...currentData.experiences];
-                    (newExperiences[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-                }
-            }
+            const crud = this.createArrayCRUD<Experience>('experiences', () => ({} as Experience));
+            crud?.update(index, field, value);
         },
+
         removeExperience(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newExperiences = [...currentData.experiences];
-                newExperiences.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-            }
+            const crud = this.createArrayCRUD<Experience>('experiences', () => ({} as Experience));
+            crud?.remove(index);
         },
+
         moveExperience(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newExperiences = [...currentData.experiences];
-                const item = newExperiences.splice(fromIndex, 1)[0];
-                newExperiences.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-            }
+            const crud = this.createArrayCRUD<Experience>('experiences', () => ({} as Experience));
+            crud?.move(fromIndex, toIndex);
         },
+
         addExperienceAchievement(experienceIndex: number, achievement = '') {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.experiences[experienceIndex]) {
-                    const newExperiences = [...currentData.experiences];
-                    newExperiences[experienceIndex] = {
-                        ...newExperiences[experienceIndex],
-                        achievements: [...newExperiences[experienceIndex].achievements, { text: achievement }],
-                    };
-                    this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Experience>('experiences');
+            crud?.addAchievement(experienceIndex, achievement);
         },
+
         updateExperienceAchievement(experienceIndex: number, achievementIndex: number, achievement: string) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.experiences[experienceIndex]?.achievements[achievementIndex] !== undefined) {
-                    const newExperiences = [...currentData.experiences];
-                    const newAchievements = [...newExperiences[experienceIndex].achievements];
-                    newAchievements[achievementIndex] = { text: achievement };
-                    newExperiences[experienceIndex] = {
-                        ...newExperiences[experienceIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Experience>('experiences');
+            crud?.updateAchievement(experienceIndex, achievementIndex, achievement);
         },
+
         removeExperienceAchievement(experienceIndex: number, achievementIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.experiences[experienceIndex]) {
-                    const newExperiences = [...currentData.experiences];
-                    const newAchievements = [...newExperiences[experienceIndex].achievements];
-                    newAchievements.splice(achievementIndex, 1);
-                    newExperiences[experienceIndex] = {
-                        ...newExperiences[experienceIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Experience>('experiences');
+            crud?.removeAchievement(experienceIndex, achievementIndex);
         },
+
         moveExperienceAchievement(experienceIndex: number, fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.experiences[experienceIndex]) {
-                    const newExperiences = [...currentData.experiences];
-                    const newAchievements = [...newExperiences[experienceIndex].achievements];
-                    const item = newAchievements.splice(fromIndex, 1)[0];
-                    newAchievements.splice(toIndex, 0, item);
-                    newExperiences[experienceIndex] = {
-                        ...newExperiences[experienceIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { experiences: newExperiences });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Experience>('experiences');
+            crud?.moveAchievement(experienceIndex, fromIndex, toIndex);
         },
+
+        // Internship methods
         addInternship() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newInternships = [...currentData.internships, {
-                    company: '',
-                    position: '',
-                    location: '',
-                    companyUrl: '',
-                    startDate: '',
-                    endDate: '',
-                    isPresent: false,
-                    achievements: [{ text: '' }],
-                }];
-                this.updateResumeData(this.activeResumeId, { internships: newInternships });
-            }
+            const crud = this.createArrayCRUD<Internship>('internships', () => ({
+                company: '',
+                position: '',
+                location: '',
+                companyUrl: '',
+                startDate: '',
+                endDate: '',
+                isPresent: false,
+                achievements: [{ text: '' }],
+            }));
+            crud?.add();
         },
+
         updateInternship(index: number, field: keyof Internship, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.internships[index]) {
-                    const newInternships = [...currentData.internships];
-                    (newInternships[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { internships: newInternships });
-                }
-            }
+            const crud = this.createArrayCRUD<Internship>('internships', () => ({} as Internship));
+            crud?.update(index, field, value);
         },
+
         removeInternship(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newInternships = [...currentData.internships];
-                newInternships.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { internships: newInternships });
-            }
+            const crud = this.createArrayCRUD<Internship>('internships', () => ({} as Internship));
+            crud?.remove(index);
         },
+
         moveInternship(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newInternships = [...currentData.internships];
-                const item = newInternships.splice(fromIndex, 1)[0];
-                newInternships.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { internships: newInternships });
-            }
+            const crud = this.createArrayCRUD<Internship>('internships', () => ({} as Internship));
+            crud?.move(fromIndex, toIndex);
         },
+
         addInternshipAchievement(internshipIndex: number, achievement = '') {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.internships[internshipIndex]) {
-                    const newInternships = [...currentData.internships];
-                    newInternships[internshipIndex] = {
-                        ...newInternships[internshipIndex],
-                        achievements: [...newInternships[internshipIndex].achievements, { text: achievement }],
-                    };
-                    this.updateResumeData(this.activeResumeId, { internships: newInternships });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Internship>('internships');
+            crud?.addAchievement(internshipIndex, achievement);
         },
+
         updateInternshipAchievement(internshipIndex: number, achievementIndex: number, achievement: string) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.internships[internshipIndex]?.achievements[achievementIndex] !== undefined) {
-                    const newInternships = [...currentData.internships];
-                    const newAchievements = [...newInternships[internshipIndex].achievements];
-                    newAchievements[achievementIndex] = { text: achievement };
-                    newInternships[internshipIndex] = {
-                        ...newInternships[internshipIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { internships: newInternships });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Internship>('internships');
+            crud?.updateAchievement(internshipIndex, achievementIndex, achievement);
         },
+
         removeInternshipAchievement(internshipIndex: number, achievementIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.internships[internshipIndex]) {
-                    const newInternships = [...currentData.internships];
-                    const newAchievements = [...newInternships[internshipIndex].achievements];
-                    newAchievements.splice(achievementIndex, 1);
-                    newInternships[internshipIndex] = {
-                        ...newInternships[internshipIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { internships: newInternships });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Internship>('internships');
+            crud?.removeAchievement(internshipIndex, achievementIndex);
         },
+
         moveInternshipAchievement(internshipIndex: number, fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.internships[internshipIndex]) {
-                    const newInternships = [...currentData.internships];
-                    const newAchievements = [...newInternships[internshipIndex].achievements];
-                    const item = newAchievements.splice(fromIndex, 1)[0];
-                    newAchievements.splice(toIndex, 0, item);
-                    newInternships[internshipIndex] = {
-                        ...newInternships[internshipIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { internships: newInternships });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Internship>('internships');
+            crud?.moveAchievement(internshipIndex, fromIndex, toIndex);
         },
+
+        // Education methods
         addEducation() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newEducation = [...currentData.education, {
-                    institution: '',
-                    degree: '',
-                    fieldOfStudy: '',
-                    location: '',
-                    startDate: '',
-                    endDate: '',
-                    isPresent: false,
-                    description: '',
-                    graduationScore: '',
-                }];
-                this.updateResumeData(this.activeResumeId, { education: newEducation });
-            }
+            const crud = this.createArrayCRUD<Education>('education', () => ({
+                institution: '',
+                degree: '',
+                fieldOfStudy: '',
+                location: '',
+                startDate: '',
+                endDate: '',
+                isPresent: false,
+                description: '',
+                graduationScore: '',
+            }));
+            crud?.add();
         },
+
         updateEducation(index: number, field: keyof Education, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.education[index]) {
-                    const newEducation = [...currentData.education];
-                    (newEducation[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { education: newEducation });
-                }
-            }
+            const crud = this.createArrayCRUD<Education>('education', () => ({} as Education));
+            crud?.update(index, field, value);
         },
+
         removeEducation(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newEducation = [...currentData.education];
-                newEducation.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { education: newEducation });
-            }
+            const crud = this.createArrayCRUD<Education>('education', () => ({} as Education));
+            crud?.remove(index);
         },
+
         moveEducation(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newEducation = [...currentData.education];
-                const item = newEducation.splice(fromIndex, 1)[0];
-                newEducation.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { education: newEducation });
-            }
+            const crud = this.createArrayCRUD<Education>('education', () => ({} as Education));
+            crud?.move(fromIndex, toIndex);
         },
+
+        // Volunteering methods
         addVolunteering() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newVolunteering = [...currentData.volunteering, {
-                    organization: '',
-                    position: '',
-                    location: '',
-                    startDate: '',
-                    endDate: '',
-                    isPresent: false,
-                    achievements: [],
-                }];
-                this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-            }
+            const crud = this.createArrayCRUD<Volunteering>('volunteering', () => ({
+                organization: '',
+                position: '',
+                location: '',
+                startDate: '',
+                endDate: '',
+                isPresent: false,
+                achievements: [],
+            }));
+            crud?.add();
         },
+
         updateVolunteering(index: number, field: keyof Volunteering, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.volunteering[index]) {
-                    const newVolunteering = [...currentData.volunteering];
-                    (newVolunteering[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-                }
-            }
+            const crud = this.createArrayCRUD<Volunteering>('volunteering', () => ({} as Volunteering));
+            crud?.update(index, field, value);
         },
+
         removeVolunteering(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newVolunteering = [...currentData.volunteering];
-                newVolunteering.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-            }
+            const crud = this.createArrayCRUD<Volunteering>('volunteering', () => ({} as Volunteering));
+            crud?.remove(index);
         },
+
         moveVolunteering(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newVolunteering = [...currentData.volunteering];
-                const item = newVolunteering.splice(fromIndex, 1)[0];
-                newVolunteering.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-            }
+            const crud = this.createArrayCRUD<Volunteering>('volunteering', () => ({} as Volunteering));
+            crud?.move(fromIndex, toIndex);
         },
+
         addVolunteeringAchievement(volunteeringIndex: number, achievement = '') {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.volunteering[volunteeringIndex]) {
-                    const newVolunteering = [...currentData.volunteering];
-                    newVolunteering[volunteeringIndex] = {
-                        ...newVolunteering[volunteeringIndex],
-                        achievements: [...newVolunteering[volunteeringIndex].achievements, { text: achievement }],
-                    };
-                    this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Volunteering>('volunteering');
+            crud?.addAchievement(volunteeringIndex, achievement);
         },
+
         updateVolunteeringAchievement(volunteeringIndex: number, achievementIndex: number, achievement: string) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.volunteering[volunteeringIndex]?.achievements[achievementIndex] !== undefined) {
-                    const newVolunteering = [...currentData.volunteering];
-                    const newAchievements = [...newVolunteering[volunteeringIndex].achievements];
-                    newAchievements[achievementIndex] = { text: achievement };
-                    newVolunteering[volunteeringIndex] = {
-                        ...newVolunteering[volunteeringIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Volunteering>('volunteering');
+            crud?.updateAchievement(volunteeringIndex, achievementIndex, achievement);
         },
+
         removeVolunteeringAchievement(volunteeringIndex: number, achievementIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.volunteering[volunteeringIndex]) {
-                    const newVolunteering = [...currentData.volunteering];
-                    const newAchievements = [...newVolunteering[volunteeringIndex].achievements];
-                    newAchievements.splice(achievementIndex, 1);
-                    newVolunteering[volunteeringIndex] = {
-                        ...newVolunteering[volunteeringIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Volunteering>('volunteering');
+            crud?.removeAchievement(volunteeringIndex, achievementIndex);
         },
+
         moveVolunteeringAchievement(volunteeringIndex: number, fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.volunteering[volunteeringIndex]) {
-                    const newVolunteering = [...currentData.volunteering];
-                    const newAchievements = [...newVolunteering[volunteeringIndex].achievements];
-                    const item = newAchievements.splice(fromIndex, 1)[0];
-                    newAchievements.splice(toIndex, 0, item);
-                    newVolunteering[volunteeringIndex] = {
-                        ...newVolunteering[volunteeringIndex],
-                        achievements: newAchievements,
-                    };
-                    this.updateResumeData(this.activeResumeId, { volunteering: newVolunteering });
-                }
-            }
+            const crud = this.createNestedAchievementsCRUD<Volunteering>('volunteering');
+            crud?.moveAchievement(volunteeringIndex, fromIndex, toIndex);
         },
+
+        // Skills methods
         addSkill() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newSkills = [...currentData.skills, {
-                    title: '',
-                    description: '',
-                }];
-                this.updateResumeData(this.activeResumeId, { skills: newSkills });
-            }
+            const crud = this.createArrayCRUD<SkillItem>('skills', () => ({
+                title: '',
+                description: '',
+            }));
+            crud?.add();
         },
+
         updateSkill(index: number, field: keyof SkillItem, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.skills[index]) {
-                    const newSkills = [...currentData.skills];
-                    (newSkills[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { skills: newSkills });
-                }
-            }
+            const crud = this.createArrayCRUD<SkillItem>('skills', () => ({} as SkillItem));
+            crud?.update(index, field, value);
         },
+
         removeSkill(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newSkills = [...currentData.skills];
-                newSkills.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { skills: newSkills });
-            }
+            const crud = this.createArrayCRUD<SkillItem>('skills', () => ({} as SkillItem));
+            crud?.remove(index);
         },
+
         moveSkill(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newSkills = [...currentData.skills];
-                const item = newSkills.splice(fromIndex, 1)[0];
-                newSkills.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { skills: newSkills });
-            }
+            const crud = this.createArrayCRUD<SkillItem>('skills', () => ({} as SkillItem));
+            crud?.move(fromIndex, toIndex);
         },
+
+        // Social Links methods
         addSocialLink() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newSocialLinks = [...currentData.socialLinks, {
-                    platform: 'linkedin',
-                    url: '',
-                    customLabel: '',
-                }];
-                this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
-            }
+            const crud = this.createArrayCRUD<SocialLink>('socialLinks', () => ({
+                platform: 'linkedin',
+                url: '',
+                customLabel: '',
+            }));
+            crud?.add();
         },
+
         updateSocialLink(index: number, field: keyof SocialLink, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.socialLinks[index]) {
-                    const newSocialLinks = [...currentData.socialLinks];
-                    (newSocialLinks[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
-                }
-            }
+            const crud = this.createArrayCRUD<SocialLink>('socialLinks', () => ({} as SocialLink));
+            crud?.update(index, field, value);
         },
+
         removeSocialLink(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newSocialLinks = [...currentData.socialLinks];
-                newSocialLinks.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
-            }
+            const crud = this.createArrayCRUD<SocialLink>('socialLinks', () => ({} as SocialLink));
+            crud?.remove(index);
         },
+
         moveSocialLink(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newSocialLinks = [...currentData.socialLinks];
-                const item = newSocialLinks.splice(fromIndex, 1)[0];
-                newSocialLinks.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { socialLinks: newSocialLinks });
-            }
+            const crud = this.createArrayCRUD<SocialLink>('socialLinks', () => ({} as SocialLink));
+            crud?.move(fromIndex, toIndex);
         },
+
+        // Projects methods
         addProject() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newProjects = [...currentData.projects, {
-                    title: '',
-                    url: '',
-                    description: '',
-                }];
-                this.updateResumeData(this.activeResumeId, { projects: newProjects });
-            }
+            const crud = this.createArrayCRUD<Project>('projects', () => ({
+                title: '',
+                url: '',
+                description: '',
+            }));
+            crud?.add();
         },
+
         updateProject(index: number, field: keyof Project, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.projects[index]) {
-                    const newProjects = [...currentData.projects];
-                    (newProjects[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { projects: newProjects });
-                }
-            }
+            const crud = this.createArrayCRUD<Project>('projects', () => ({} as Project));
+            crud?.update(index, field, value);
         },
+
         removeProject(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newProjects = [...currentData.projects];
-                newProjects.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { projects: newProjects });
-            }
+            const crud = this.createArrayCRUD<Project>('projects', () => ({} as Project));
+            crud?.remove(index);
         },
+
         moveProject(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newProjects = [...currentData.projects];
-                const item = newProjects.splice(fromIndex, 1)[0];
-                newProjects.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { projects: newProjects });
-            }
+            const crud = this.createArrayCRUD<Project>('projects', () => ({} as Project));
+            crud?.move(fromIndex, toIndex);
         },
+
+        // Languages methods
         addLanguage() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newLanguages = [...currentData.languages, {
-                    name: '',
-                    proficiency: '',
-                }];
-                this.updateResumeData(this.activeResumeId, { languages: newLanguages });
-            }
+            const crud = this.createArrayCRUD<Language>('languages', () => ({
+                name: '',
+                proficiency: '',
+            }));
+            crud?.add();
         },
+
         updateLanguage(index: number, field: keyof Language, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.languages[index]) {
-                    const newLanguages = [...currentData.languages];
-                    (newLanguages[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { languages: newLanguages });
-                }
-            }
+            const crud = this.createArrayCRUD<Language>('languages', () => ({} as Language));
+            crud?.update(index, field, value);
         },
+
         removeLanguage(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newLanguages = [...currentData.languages];
-                newLanguages.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { languages: newLanguages });
-            }
+            const crud = this.createArrayCRUD<Language>('languages', () => ({} as Language));
+            crud?.remove(index);
         },
+
         moveLanguage(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newLanguages = [...currentData.languages];
-                const item = newLanguages.splice(fromIndex, 1)[0];
-                newLanguages.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { languages: newLanguages });
-            }
+            const crud = this.createArrayCRUD<Language>('languages', () => ({} as Language));
+            crud?.move(fromIndex, toIndex);
         },
+
+        // Certificates methods
         addCertificate() {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newCertificates = [...currentData.certificates, {
-                    title: '',
-                    issuer: '',
-                    date: '',
-                    url: '',
-                }];
-                this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
-            }
+            const crud = this.createArrayCRUD<Certificate>('certificates', () => ({
+                title: '',
+                issuer: '',
+                date: '',
+                url: '',
+            }));
+            crud?.add();
         },
+
         updateCertificate(index: number, field: keyof Certificate, value: unknown) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                if (currentData.certificates[index]) {
-                    const newCertificates = [...currentData.certificates];
-                    (newCertificates[index] as Record<string, unknown>)[field] = value;
-                    this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
-                }
-            }
+            const crud = this.createArrayCRUD<Certificate>('certificates', () => ({} as Certificate));
+            crud?.update(index, field, value);
         },
+
         removeCertificate(index: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newCertificates = [...currentData.certificates];
-                newCertificates.splice(index, 1);
-                this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
-            }
+            const crud = this.createArrayCRUD<Certificate>('certificates', () => ({} as Certificate));
+            crud?.remove(index);
         },
+
         moveCertificate(fromIndex: number, toIndex: number) {
-            if (this.activeResumeId) {
-                const currentData = this.resumes[this.activeResumeId].data;
-                const newCertificates = [...currentData.certificates];
-                const item = newCertificates.splice(fromIndex, 1)[0];
-                newCertificates.splice(toIndex, 0, item);
-                this.updateResumeData(this.activeResumeId, { certificates: newCertificates });
-            }
+            const crud = this.createArrayCRUD<Certificate>('certificates', () => ({} as Certificate));
+            crud?.move(fromIndex, toIndex);
         },
+
+        // Section management
         updateSectionOrder(newOrder: SectionOrder) {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, { sectionOrder: { ...newOrder } });
             }
         },
+
         updateSectionHeader(section: keyof SectionHeaders, headerText: string, locale: string) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -810,6 +618,7 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { sectionHeadersI18n: newI18nHeaders });
             }
         },
+
         updateSectionPlacement(section: keyof SectionPlacement, placement: 'left' | 'right') {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -817,6 +626,7 @@ export const useResumeStore = defineStore('resume', {
                 this.updateResumeData(this.activeResumeId, { sectionPlacement: newPlacement });
             }
         },
+
         moveSectionUp(sectionKey: keyof SectionOrder) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -834,6 +644,7 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
+
         moveSectionDown(sectionKey: keyof SectionOrder) {
             if (this.activeResumeId) {
                 const currentData = this.resumes[this.activeResumeId].data;
@@ -852,20 +663,25 @@ export const useResumeStore = defineStore('resume', {
                 }
             }
         },
+
+        // Data operations
         setResumeData(data: ResumeData) {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, data);
             }
         },
+
         resetResumeData() {
             if (this.activeResumeId) {
                 this.updateResumeData(this.activeResumeId, { ...defaultResumeData });
             }
         },
+
         exportData(): string {
             const currentData = this.activeResumeId ? this.resumes[this.activeResumeId]?.data : null;
             return JSON.stringify(currentData || { ...defaultResumeData }, null, 2);
         },
+
         importData(jsonString: string): boolean {
             try {
                 const data = JSON.parse(jsonString);
@@ -878,6 +694,8 @@ export const useResumeStore = defineStore('resume', {
                 return false;
             }
         },
+
+        // Server sync operations
         async fetchServerResumes() {
             this.isLoading = true;
             this.error = null;
@@ -894,6 +712,7 @@ export const useResumeStore = defineStore('resume', {
                 this.isLoading = false;
             }
         },
+
         async reconcileServerResumes(serverResumes: Array<{ id: string; name: string; data: ResumeData; createdAt: string; updatedAt: string }>) {
             for (const serverResume of serverResumes) {
                 const localResumeId = this.findLocalResumeByServerId(serverResume.id);
@@ -945,6 +764,7 @@ export const useResumeStore = defineStore('resume', {
                 toast.info(`${orphanedCount} resume${orphanedCount > 1 ? 's' : ''} removed from cloud sync`);
             }
         },
+
         findLocalResumeByServerId(serverId: string): string | null {
             for (const [localId, resume] of Object.entries(this.resumes)) {
                 if (resume.serverId === serverId) {
@@ -953,6 +773,7 @@ export const useResumeStore = defineStore('resume', {
             }
             return null;
         },
+
         async syncResumeToServer(resumeId: string) {
             const resume = this.resumes[resumeId];
             if (!resume) return;

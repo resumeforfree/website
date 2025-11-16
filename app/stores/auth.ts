@@ -25,6 +25,8 @@ export const useAuthStore = defineStore('auth', {
     actions: {
         async login(email: string, password?: string, turnstileToken?: string) {
             const api = useApi();
+            const { extractErrorMessage } = useErrorHandler();
+
             return await api.auth.login(email, password, turnstileToken)
                 .then((result) => {
                     if (result?.user) {
@@ -32,17 +34,19 @@ export const useAuthStore = defineStore('auth', {
                     }
                     return { success: true };
                 })
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .catch((error: any) => {
-                    console.error('Login error:', error);
+                .catch((error: unknown) => {
+                    const errorMessage = extractErrorMessage(error);
+                    console.error('Login error:', errorMessage);
                     return {
                         success: false,
-                        error: error?.message || 'Login failed',
+                        error: errorMessage,
                     };
                 });
         },
         async register(email: string, password: string, passwordConfirm: string, name: string, turnstileToken?: string) {
             const api = useApi();
+            const { extractErrorMessage } = useErrorHandler();
+
             return await api.auth.register(email, password, passwordConfirm, name, turnstileToken)
                 .then((result) => {
                     if (result?.user) {
@@ -50,33 +54,37 @@ export const useAuthStore = defineStore('auth', {
                     }
                     return { success: true };
                 })
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .catch((error: any) => {
-                    console.error('Registration error:', error);
+                .catch((error: unknown) => {
+                    const errorMessage = extractErrorMessage(error);
+                    console.error('Registration error:', errorMessage);
                     return {
                         success: false,
-                        error: error?.message || 'Registration failed',
+                        error: errorMessage,
                     };
                 });
         },
         async logout() {
             const api = useApi();
+            const { extractErrorMessage } = useErrorHandler();
+
             return await api.auth.logout()
                 .then(() => {
                     this.clearAuth();
                     return { success: true };
                 })
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .catch((error: any) => {
-                    console.error('Logout error:', error);
+                .catch((error: unknown) => {
+                    const errorMessage = extractErrorMessage(error);
+                    console.error('Logout error:', errorMessage);
                     return {
                         success: false,
-                        error: error?.message || 'Logout failed',
+                        error: errorMessage,
                     };
                 });
         },
         async refreshAuth() {
             const api = useApi();
+            const { extractErrorMessage } = useErrorHandler();
+
             return await api.auth.getSession()
                 .then((result) => {
                     if (result?.user) {
@@ -85,13 +93,13 @@ export const useAuthStore = defineStore('auth', {
                     }
                     return { success: false, error: 'No valid session' };
                 })
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .catch((error: any) => {
-                    console.error('Auth refresh error:', error);
+                .catch((error: unknown) => {
+                    const errorMessage = extractErrorMessage(error);
+                    console.error('Auth refresh error:', errorMessage);
                     this.clearAuth();
                     return {
                         success: false,
-                        error: error?.message || 'Auth refresh failed',
+                        error: errorMessage,
                     };
                 });
         },
