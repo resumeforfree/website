@@ -1,4 +1,4 @@
-import { escapeTypstText } from './stringUtils';
+import { escapeTypstString, escapeTypstText } from './stringUtils';
 
 export const HEADER_SPACING = '1em';
 export const SECTION_SPACING = '1.6em';
@@ -9,11 +9,11 @@ export const convertEmail = (email: string): string => {
 };
 export const convertLink = (url: string, text: string): string => {
     if (!url || !text) return '';
-    return `#link("${url}")[#text(fill: blue, "${escapeTypstText(text)}")]`;
+    return `#link("${url}")[#text(fill: blue, "${escapeTypstString(text)}")]`;
 };
 export const convertLinkWithColor = (url: string, text: string, color = 'blue'): string => {
     if (!url || !text) return '';
-    return `#link("${url}")[#text(fill: ${color}, "${escapeTypstText(text)}")]`;
+    return `#link("${url}")[#text(fill: ${color}, "${escapeTypstString(text)}")]`;
 };
 export const convertExternalLinkIcon = (url: string): string => {
     if (!url) return '';
@@ -21,11 +21,11 @@ export const convertExternalLinkIcon = (url: string): string => {
 };
 export const convertHeader = (title: string, size = '16pt'): string => {
     if (!title) return '';
-    return `#block(below: ${HEADER_SPACING}, above: 0em)[#text("${escapeTypstText(title)}", size: ${size}, weight: "bold")]`;
+    return `#block(below: ${HEADER_SPACING}, above: 0em)[#text("${escapeTypstString(title)}", size: ${size}, weight: "bold")]`;
 };
 export const convertSubHeader = (title: string, size = '14pt'): string => {
     if (!title) return '';
-    return `#block(below: 1em)[#text("${escapeTypstText(title)}", size: ${size}, weight: "bold")]`;
+    return `#block(below: 1em)[#text("${escapeTypstString(title)}", size: ${size}, weight: "bold")]`;
 };
 export const formatDateToMonthYear = (date: string): string => {
     if (!date) return '';
@@ -54,7 +54,7 @@ export const convertDateRange = (startDate: string, endDate?: string, isPresent?
     if (isPresent) {
         dateText += dateText ? ` - ${presentText}` : presentText;
     }
-    return `#text(fill: gray, "${escapeTypstText(dateText)}")`;
+    return `#text(fill: gray, "${escapeTypstString(dateText)}")`;
 };
 export const convertList = (items: string[], indent = '1em'): string => {
     if (!items || items.length === 0) return '';
@@ -85,7 +85,7 @@ export const renderTemplateHeader = (text: string, fontSize: number): string => 
     return convertHeader(text, `${fontSize + 2}pt`);
 };
 export const renderTemplateSubHeader = (text: string, fontSize: number): string => {
-    return `#block(below: 0.6em)[#text("${escapeTypstText(text)}", size: ${fontSize}pt, weight: "bold")]`;
+    return `#block(below: 0.6em)[#text("${escapeTypstString(text)}", size: ${fontSize}pt, weight: "bold")]`;
 };
 export const renderTemplateDate = (dateText: string, fontSize: number): string => {
     return `#block(above: 0em, below: 0.6em)[#text(size: ${fontSize - 2}pt)[${dateText}]]`;

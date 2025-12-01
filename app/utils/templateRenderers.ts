@@ -1,7 +1,7 @@
 import type { Certificate, Education, Experience, Internship, Language, Project, ResumeData, SkillItem, Volunteering } from '~/types/resume';
 import type { SectionContent } from '~/types/templateConfig';
 import { convertDateRange, convertEmail, convertExternalLinkIcon, convertLink } from './typstUtils';
-import { escapeTypstText } from './stringUtils';
+import { escapeTypstString, escapeTypstText } from './stringUtils';
 
 type TranslateFunction = (key: string) => string;
 
@@ -95,7 +95,7 @@ export const generateProjectsContent = (projects: Project[]): SectionContent[] =
         .map((project) => {
             let title = '';
             if (project.title.trim()) {
-                title = `#block(below: 0.6em)[#text("${escapeTypstText(project.title)}", weight: "bold")`;
+                title = `#block(below: 0.6em)[#text("${escapeTypstString(project.title)}", weight: "bold")`;
                 if (project.url.trim()) {
                     title += ` • ${convertExternalLinkIcon(project.url)}`;
                 }
