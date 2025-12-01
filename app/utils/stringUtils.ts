@@ -8,7 +8,6 @@ export function escapeTypstText(text: string): string {
         .replace(/\\/g, '\\\\')
         .replace(/\$/g, '\\$')
         .replace(/"/g, '\\"')
-        .replace(/#/g, '\\#')
         .replace(/\{/g, '\\{')
         .replace(/\}/g, '\\}')
         .replace(/\[/g, '\\[')
