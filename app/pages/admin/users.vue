@@ -67,6 +67,9 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     {{ $t('admin.users.createdAt') }}
                                 </th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ $t('common.actions') }}
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -99,12 +102,168 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                                     {{ formatDate(user.created_at) }}
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger as-child>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                            >
+                                                <MoreVertical class="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem @click="openChangePasswordDialog(user)">
+                                                <Key class="w-4 h-4 mr-2" />
+                                                {{ $t('admin.users.actions.changePassword') }}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                class="text-red-600 focus:text-red-600"
+                                                @click="confirmDeleteUser(user.id)"
+                                            >
+                                                <Trash2 class="w-4 h-4 mr-2" />
+                                                {{ $t('admin.users.actions.delete') }}
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </CardContent>
         </Card>
+
+        <!-- Password Success Dialog -->
+        <Dialog v-model:open="passwordSuccessDialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>{{ $t('admin.users.changePassword.successDialog.title') }}</DialogTitle>
+                    <DialogDescription>
+                        {{ $t('admin.users.changePassword.successDialog.description', { email: successPasswordEmail }) }}
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="space-y-4 py-4">
+                    <div class="flex items-center gap-2">
+                        <Input
+                            :model-value="successPassword"
+                            readonly
+                            class="flex-1 font-mono"
+                        />
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            :title="$t('common.copy')"
+                            @click="copyPassword"
+                        >
+                            <Check
+                                v-if="copied"
+                                class="w-4 h-4 text-green-600"
+                            />
+                            <Copy
+                                v-else
+                                class="w-4 h-4"
+                            />
+                        </Button>
+                    </div>
+                    <p class="text-sm text-amber-600">
+                        {{ $t('admin.users.changePassword.successDialog.warning') }}
+                    </p>
+                </div>
+                <DialogFooter>
+                    <Button @click="passwordSuccessDialogOpen = false">
+                        {{ $t('common.done') }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Change Password Dialog -->
+        <Dialog v-model:open="changePasswordDialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>{{ $t('admin.users.changePassword.title') }}</DialogTitle>
+                    <DialogDescription>
+                        {{ $t('admin.users.changePassword.description', { email: selectedUser?.email }) }}
+                    </DialogDescription>
+                </DialogHeader>
+                <div class="space-y-4 py-4">
+                    <div class="space-y-2">
+                        <Label for="newPassword">{{ $t('admin.users.changePassword.newPassword') }}</Label>
+                        <div class="flex gap-2">
+                            <Input
+                                id="newPassword"
+                                v-model="newPassword"
+                                :type="showPassword ? 'text' : 'password'"
+                                :placeholder="$t('admin.users.changePassword.newPasswordPlaceholder')"
+                                class="flex-1"
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                :title="$t('admin.users.changePassword.toggleVisibility')"
+                                @click="showPassword = !showPassword"
+                            >
+                                <EyeOff
+                                    v-if="showPassword"
+                                    class="w-4 h-4"
+                                />
+                                <Eye
+                                    v-else
+                                    class="w-4 h-4"
+                                />
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                :title="$t('admin.users.changePassword.generateRandom')"
+                                @click="generateRandomPassword"
+                            >
+                                <RefreshCw class="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="confirmPassword">{{ $t('admin.users.changePassword.confirmPassword') }}</Label>
+                        <Input
+                            id="confirmPassword"
+                            v-model="confirmPassword"
+                            :type="showPassword ? 'text' : 'password'"
+                            :placeholder="$t('admin.users.changePassword.confirmPasswordPlaceholder')"
+                        />
+                    </div>
+                    <p
+                        v-if="passwordError"
+                        class="text-sm text-red-600"
+                    >
+                        {{ passwordError }}
+                    </p>
+                </div>
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        @click="changePasswordDialogOpen = false"
+                    >
+                        {{ $t('common.cancel') }}
+                    </Button>
+                    <Button
+                        :disabled="isChangingPassword"
+                        @click="changePassword"
+                    >
+                        <span
+                            v-if="isChangingPassword"
+                            class="mr-2"
+                        >
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                        </span>
+                        {{ $t('admin.users.changePassword.submit') }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <!-- Pagination -->
         <div
@@ -149,10 +308,13 @@
 </template>
 
 <script lang="ts" setup>
-import { Users, Search } from 'lucide-vue-next';
+import { Users, Search, MoreVertical, Key, Trash2, Eye, EyeOff, RefreshCw, Copy, Check } from 'lucide-vue-next';
 import { Card, CardContent } from '~/components/ui/card';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '~/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import { toast } from 'vue-sonner';
 
 definePageMeta({
@@ -180,6 +342,21 @@ const pagination = ref({
     total: 0,
     totalPages: 0,
 });
+
+// Change password state
+const changePasswordDialogOpen = ref(false);
+const selectedUser = ref<User | null>(null);
+const newPassword = ref('');
+const confirmPassword = ref('');
+const passwordError = ref('');
+const isChangingPassword = ref(false);
+const showPassword = ref(false);
+
+// Password success dialog state
+const passwordSuccessDialogOpen = ref(false);
+const successPassword = ref('');
+const successPasswordEmail = ref('');
+const copied = ref(false);
 
 // Setup debounced search
 const { searchQuery, debouncedQuery, isSearching, abortController } = useDebouncedSearch({
@@ -227,7 +404,7 @@ const goToPage = (page: number) => {
     fetchUsers();
 };
 
-const confirmDelete = (userId: string) => {
+const confirmDeleteUser = (userId: string) => {
     if (confirm(t('admin.users.confirmDelete'))) {
         deleteUser(userId);
     }
@@ -247,6 +424,90 @@ const deleteUser = async (userId: string) => {
     catch (error) {
         console.error('Error deleting user:', error);
         toast.error(t('admin.users.errors.deleteFailed'));
+    }
+};
+
+const openChangePasswordDialog = (user: User) => {
+    selectedUser.value = user;
+    newPassword.value = '';
+    confirmPassword.value = '';
+    passwordError.value = '';
+    showPassword.value = false;
+    changePasswordDialogOpen.value = true;
+};
+
+const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const length = 12;
+    let password = '';
+    for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    newPassword.value = password;
+    confirmPassword.value = password;
+    showPassword.value = true;
+    passwordError.value = '';
+};
+
+const changePassword = async () => {
+    passwordError.value = '';
+
+    if (!newPassword.value) {
+        passwordError.value = t('admin.users.changePassword.errors.required');
+        return;
+    }
+
+    if (newPassword.value.length < 8) {
+        passwordError.value = t('admin.users.changePassword.errors.minLength');
+        return;
+    }
+
+    if (newPassword.value !== confirmPassword.value) {
+        passwordError.value = t('admin.users.changePassword.errors.mismatch');
+        return;
+    }
+
+    if (!selectedUser.value) return;
+
+    isChangingPassword.value = true;
+
+    try {
+        await $fetch(`/api/admin/users/${selectedUser.value.id}/password`, {
+            method: 'PATCH',
+            body: {
+                newPassword: newPassword.value,
+            },
+        });
+
+        // Store password and email for success dialog
+        successPassword.value = newPassword.value;
+        successPasswordEmail.value = selectedUser.value.email;
+        copied.value = false;
+
+        // Close change password dialog and open success dialog
+        changePasswordDialogOpen.value = false;
+        passwordSuccessDialogOpen.value = true;
+    }
+    catch (error) {
+        console.error('Error changing password:', error);
+        toast.error(t('admin.users.changePassword.errors.failed'));
+    }
+    finally {
+        isChangingPassword.value = false;
+    }
+};
+
+const copyPassword = async () => {
+    try {
+        await navigator.clipboard.writeText(successPassword.value);
+        copied.value = true;
+        setTimeout(() => {
+            copied.value = false;
+        }, 2000);
+    }
+    catch (error) {
+        console.error('Failed to copy password:', error);
+        toast.error(t('common.copyFailed'));
     }
 };
 

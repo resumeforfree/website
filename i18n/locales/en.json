@@ -8,6 +8,7 @@
         "remove": "Remove",
         "close": "Close",
         "done": "Done",
+        "copyFailed": "Failed to copy to clipboard",
         "preview": "Preview",
         "download": "Download",
         "loading": "Loading...",
@@ -604,9 +605,33 @@
             "actions": {
                 "makeAdmin": "Make Admin",
                 "removeAdmin": "Remove Admin",
-                "delete": "Delete User"
+                "delete": "Delete User",
+                "changePassword": "Change Password"
             },
             "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+            "changePassword": {
+                "title": "Change Password",
+                "description": "Set a new password for {email}",
+                "newPassword": "New Password",
+                "newPasswordPlaceholder": "Enter new password",
+                "confirmPassword": "Confirm Password",
+                "confirmPasswordPlaceholder": "Confirm new password",
+                "submit": "Change Password",
+                "success": "Password changed successfully",
+                "generateRandom": "Generate random password",
+                "toggleVisibility": "Toggle password visibility",
+                "successDialog": {
+                    "title": "Password Changed",
+                    "description": "The password for {email} has been changed successfully.",
+                    "warning": "Make sure to copy this password now. You won't be able to see it again."
+                },
+                "errors": {
+                    "required": "Password is required",
+                    "minLength": "Password must be at least 8 characters",
+                    "mismatch": "Passwords do not match",
+                    "failed": "Failed to change password"
+                }
+            },
             "success": {
                 "roleUpdated": "User role updated",
                 "deleted": "User deleted successfully"
